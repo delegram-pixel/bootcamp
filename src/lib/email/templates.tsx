@@ -226,3 +226,29 @@ export function AnnouncementEmail({
     </Shell>
   );
 }
+
+export function PasswordResetEmail({
+  name,
+  url: link,
+}: {
+  name?: string | null;
+  url: string;
+}) {
+  return (
+    <Shell
+      preview="Set your Intern Portal password"
+      heading="Set your password"
+      cta={{ href: link, label: "Set password" }}
+    >
+      <Text style={para}>{hi(name)}</Text>
+      <Text style={para}>
+        Use the button below to set a new password for your Intern Portal account.
+        The link is single-use and expires soon — if it stops working, request a
+        fresh one from the “Forgot password?” link on the sign-in page.
+      </Text>
+      <Text style={{ ...para, color: "#a1a1aa" }}>
+        If you didn’t expect this, you can safely ignore this email.
+      </Text>
+    </Shell>
+  );
+}

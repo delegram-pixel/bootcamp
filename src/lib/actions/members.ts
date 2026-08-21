@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { memberships, users } from "@/db/schema";
 import { guardedAction, ok, fail, type ActionResult } from "@/lib/actions/types";
+import { createPasswordResetToken, ONBOARD_TOKEN_TTL_MS } from "@/lib/auth/reset";
 import {
   addMemberSchema,
   inviteInternSchema,
@@ -35,12 +36,15 @@ async function upsertUserByEmail(email: string, name?: string) {
 
 export async function inviteIntern(
   input: InviteInternInput,
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ActionResult<{ id: string; setPasswordUrl: string }>> {
   return guardedAction({ ...ADMIN, schema: inviteInternSchema, input }, async (data) => {
     const user = await upsertUserByEmail(data.email, data.name || undefined);
+    // Issue a first-password link (longer-lived than a self-service reset) so the
+    // admin can hand it over directly — handy before an email domain is verified.
+    const { url } = await createPasswordResetToken(user.id, ONBOARD_TOKEN_TTL_MS);
     revalidatePath("/admin/members");
     revalidatePath("/admin");
-    return ok({ id: user.id }, "Intern added");
+    return ok({ id: user.id, setPasswordUrl: url }, "Intern added");
   });
 }
 
