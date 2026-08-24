@@ -1,15 +1,16 @@
-import { NotebookPenIcon } from "lucide-react";
+import Link from "next/link";
+import { NotebookPenIcon, PlusIcon } from "lucide-react";
 
 import { getNotesForUser, listAllNotes } from "@/db/queries/notes";
 import { listGroups } from "@/db/queries/groups";
 import { requireUser } from "@/lib/authz";
 import { formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
 import { Markdown } from "@/components/markdown";
 import { PageHeader } from "@/components/page-header";
-import { CreateNoteDialog } from "@/components/admin/create-note-dialog";
 import { NoteActions } from "@/components/admin/note-actions";
 
 export const metadata = { title: "Notes" };
@@ -33,7 +34,14 @@ export default async function NotesPage() {
             : "Lesson notes and resources shared with your groups."
         }
       >
-        {isAdmin ? <CreateNoteDialog groups={groupOptions} /> : null}
+        {isAdmin ? (
+          <Button asChild>
+            <Link href="/notes/new">
+              <PlusIcon className="size-4" />
+              New note
+            </Link>
+          </Button>
+        ) : null}
       </PageHeader>
 
       {notes.length === 0 ? (
@@ -46,7 +54,14 @@ export default async function NotesPage() {
               : "Your mentors haven't shared any notes yet."
           }
         >
-          {isAdmin ? <CreateNoteDialog groups={groupOptions} /> : null}
+          {isAdmin ? (
+          <Button asChild>
+            <Link href="/notes/new">
+              <PlusIcon className="size-4" />
+              New note
+            </Link>
+          </Button>
+        ) : null}
         </EmptyState>
       ) : (
         <div className="space-y-4">
