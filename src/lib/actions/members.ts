@@ -9,10 +9,10 @@ import { memberships, users } from "@/db/schema";
 import { guardedAction, ok, fail, type ActionResult } from "@/lib/actions/types";
 import { createPasswordResetToken, ONBOARD_TOKEN_TTL_MS } from "@/lib/auth/reset";
 import {
-  addMemberSchema,
+  addMembersSchema,
   inviteInternSchema,
   membershipRoleSchema,
-  type AddMemberInput,
+  type AddMembersInput,
   type InviteInternInput,
 } from "@/lib/validations";
 
@@ -48,17 +48,25 @@ export async function inviteIntern(
   });
 }
 
-export async function addMember(input: AddMemberInput): Promise<ActionResult> {
-  return guardedAction({ ...ADMIN, schema: addMemberSchema, input }, async (data) => {
-    const user = await upsertUserByEmail(data.email, data.name || undefined);
+export async function addMembers(input: AddMembersInput): Promise<ActionResult> {
+  return guardedAction({ ...ADMIN, schema: addMembersSchema, input }, async (data) => {
+    // Everyone here has already registered; we only attach memberships. Any who
+    // are somehow already in the group are skipped by the unique constraint.
     await db
       .insert(memberships)
-      .values({ userId: user.id, groupId: data.groupId, roleInGroup: data.roleInGroup })
+      .values(
+        data.userIds.map((userId) => ({
+          userId,
+          groupId: data.groupId,
+          roleInGroup: data.roleInGroup,
+        })),
+      )
       .onConflictDoNothing();
     revalidatePath(`/admin/groups/${data.groupId}`);
     revalidatePath("/admin/members");
     revalidatePath("/admin");
-    return ok(undefined, "Member added");
+    const n = data.userIds.length;
+    return ok(undefined, `${n} member${n === 1 ? "" : "s"} added`);
   });
 }
 

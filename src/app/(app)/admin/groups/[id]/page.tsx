@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { FileTextIcon, NotebookPenIcon, PlusIcon, UsersIcon } from "lucide-react";
 
 import { getGroupDetail } from "@/db/queries/groups";
+import { listAddableUsers } from "@/db/queries/users";
 import { formatDate, dueLabel } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,6 +46,8 @@ export default async function GroupDetailPage({
   const group = await getGroupDetail(id);
   if (!group) notFound();
 
+  const addableUsers = await listAddableUsers(id);
+
   // Mentors first, then interns; alphabetical within each.
   const members = [...group.memberships].sort((a, b) => {
     if (a.roleInGroup !== b.roleInGroup) return a.roleInGroup === "mentor" ? -1 : 1;
@@ -84,14 +87,14 @@ export default async function GroupDetailPage({
             Roster
             <span className="text-muted-foreground font-normal">({members.length})</span>
           </h2>
-          <AddMemberDialog groupId={group.id} />
+          <AddMemberDialog groupId={group.id} users={addableUsers} />
         </div>
 
         {members.length === 0 ? (
           <EmptyState
             icon={UsersIcon}
             title="No members yet"
-            description="Add interns and mentors by email."
+            description="Add people who’ve signed up, or share the invite link above."
           />
         ) : (
           <div className="rounded-xl border">

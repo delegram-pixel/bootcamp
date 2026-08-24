@@ -18,16 +18,13 @@ export type GroupUpdateInput = z.infer<typeof groupUpdateSchema>;
 
 export const membershipRoleSchema = z.enum(["mentor", "intern"]);
 
-/** Invite/add someone to a group by email (created if they don't exist yet). */
-export const addMemberSchema = z.object({
+/** Add already-registered users to a group (multi-select by id). */
+export const addMembersSchema = z.object({
   groupId: z.string().min(1),
-  email: z.email("Enter a valid email"),
-  name: z.string().trim().max(120).optional().or(z.literal("")),
+  userIds: z.array(z.string().min(1)).min(1, "Select at least one person"),
   roleInGroup: membershipRoleSchema.default("intern"),
 });
-export type AddMemberInput = z.infer<typeof addMemberSchema>;
-/** Pre-parse shape for the form (roleInGroup optional until the default applies). */
-export type AddMemberFormInput = z.input<typeof addMemberSchema>;
+export type AddMembersInput = z.infer<typeof addMembersSchema>;
 
 /** Create an intern user (no group yet). */
 export const inviteInternSchema = z.object({
