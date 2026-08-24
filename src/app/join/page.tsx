@@ -4,8 +4,8 @@ import { GraduationCapIcon } from "lucide-react";
 
 import { features } from "@/lib/env";
 import { getCurrentUser } from "@/lib/authz";
-import { resetTokenStatus } from "@/lib/auth/reset";
-import { ResetPasswordForm } from "@/components/auth/reset-password-form";
+import { getGroupByJoinCode } from "@/db/queries/groups";
+import { JoinForm } from "@/components/auth/join-form";
 import { SetupRequired } from "@/components/setup-required";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,20 +16,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export const metadata = { title: "Set your password" };
+export const metadata = { title: "Join your cohort" };
 
-export default async function ResetPasswordPage({
+export default async function JoinPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ code?: string }>;
 }) {
   if (!features.database) return <SetupRequired />;
 
+  // Already signed in? Nothing to register — send them into the portal.
   const user = await getCurrentUser();
   if (user) redirect("/");
 
-  const { token } = await searchParams;
-  const status = token ? await resetTokenStatus(token) : "invalid";
+  const { code } = await searchParams;
+  const group = code ? await getGroupByJoinCode(code) : null;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 p-6">
@@ -37,39 +38,39 @@ export default async function ResetPasswordPage({
         <div className="bg-primary text-primary-foreground flex size-11 items-center justify-center rounded-xl">
           <GraduationCapIcon className="size-6" />
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight">Set your password</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {group ? `Join ${group.name}` : "Intern Portal"}
+        </h1>
       </div>
 
       <Card>
-        {status === "valid" ? (
+        {group ? (
           <>
             <CardHeader>
-              <CardTitle>Choose a password</CardTitle>
+              <CardTitle>Create your account</CardTitle>
               <CardDescription>
-                Pick something you’ll remember — at least 8 characters.
+                You’re joining <span className="text-foreground font-medium">{group.name}</span>{" "}
+                as an intern. Already have an account?{" "}
+                <Link href="/login" className="underline underline-offset-4">
+                  Sign in
+                </Link>
+                .
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResetPasswordForm token={token as string} />
+              <JoinForm code={code as string} groupName={group.name} />
             </CardContent>
           </>
         ) : (
           <>
             <CardHeader>
-              <CardTitle>
-                {status === "used" ? "Link already used" : "Link invalid or expired"}
-              </CardTitle>
+              <CardTitle>Invite link invalid</CardTitle>
               <CardDescription>
-                {status === "used"
-                  ? "This reset link has already been used to set a password."
-                  : "This reset link is invalid or has expired."}{" "}
-                Request a new one to continue.
+                This invite link is invalid or has been turned off. Ask your program admin
+                for a fresh link to join your cohort.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <Button asChild className="w-full">
-                <Link href="/forgot-password">Request a new link</Link>
-              </Button>
+            <CardContent>
               <Button asChild variant="ghost" className="w-full">
                 <Link href="/login">Back to sign in</Link>
               </Button>

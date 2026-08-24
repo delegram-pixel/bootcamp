@@ -128,6 +128,10 @@ export const groups = pgTable("group", {
   name: text("name").notNull(),
   description: text("description"),
   status: groupStatus("status").notNull().default("active"),
+  // Shareable cohort invite code. Null = no active invite link. Students who
+  // open /join?code=… self-register straight into this group as interns.
+  // Plaintext (the admin re-displays it to copy); rotate/disable to invalidate.
+  joinCode: text("join_code").unique(),
   createdAt: createdAt(),
 });
 

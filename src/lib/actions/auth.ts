@@ -1,16 +1,20 @@
 "use server";
 
 import { AuthError } from "next-auth";
+import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { memberships, users } from "@/db/schema";
+import { getGroupByJoinCode } from "@/db/queries/groups";
 import { signIn, signOut } from "@/lib/auth";
 import {
+  joinSchema,
   loginSchema,
   requestResetSchema,
   resetPasswordSchema,
+  type JoinInput,
   type LoginInput,
   type RequestResetInput,
   type ResetPasswordInput,
@@ -111,6 +115,78 @@ export async function resetPassword(input: ResetPasswordInput): Promise<ActionRe
   } catch (e) {
     console.error("resetPassword failed:", e);
     return fail("Something went wrong. Please try again.");
+  }
+}
+
+/**
+ * Student self-registration via a cohort invite link. Public (no session yet),
+ * so it re-derives everything the client shouldn't be trusted with: the code is
+ * re-validated to an *active* group here, the role is hard-coded `intern`, and
+ * an already-registered email is refused (a shared code must never attach to an
+ * existing account). On success the new intern is auto signed-in.
+ */
+export async function joinWithCode(input: JoinInput): Promise<ActionResult> {
+  const parsed = joinSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail("Please fix the highlighted fields.", zodFieldErrors(parsed.error));
+  }
+
+  const { code, name, password } = parsed.data;
+  const email = parsed.data.email.trim().toLowerCase();
+
+  // The invite code is the gate. Only *active* cohorts are joinable — a turned-off
+  // or archived group's code resolves to nothing.
+  const group = await getGroupByJoinCode(code);
+  if (!group) {
+    return fail(
+      "This invite link is invalid or has been turned off. Ask your admin for a new one.",
+    );
+  }
+
+  // New accounts only. Attaching a shared code to an existing email would be an
+  // account-takeover vector — existing users sign in with their own password.
+  const existing = await db.query.users.findFirst({
+    where: eq(users.email, email),
+    columns: { id: true },
+  });
+  if (existing) {
+    return fail("That email already has an account — sign in instead.");
+  }
+
+  try {
+    const passwordHash = await bcrypt.hash(password, 10);
+    const userId = crypto.randomUUID();
+    await db.insert(users).values({
+      id: userId,
+      email,
+      name: name.trim(),
+      role: "intern", // server-derived — never taken from the client
+      passwordHash,
+    });
+    await db
+      .insert(memberships)
+      .values({ userId, groupId: group.id, roleInGroup: "intern" })
+      .onConflictDoNothing();
+
+    // Roster + admin counts should reflect the new intern immediately.
+    revalidatePath(`/admin/groups/${group.id}`);
+    revalidatePath("/admin/members");
+    revalidatePath("/admin");
+  } catch (e) {
+    console.error("joinWithCode failed:", e);
+    return fail("Something went wrong creating your account. Please try again.");
+  }
+
+  // Auto sign-in. Like signInWithPassword, success throws NEXT_REDIRECT (→ "/"),
+  // which we re-throw so navigation happens; only an AuthError is surfaced.
+  try {
+    await signIn("credentials", { email, password, redirectTo: "/" });
+    return ok();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return fail("Account created — please sign in to continue.");
+    }
+    throw error; // NEXT_REDIRECT — let navigation happen
   }
 }
 

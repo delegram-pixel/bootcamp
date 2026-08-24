@@ -48,6 +48,18 @@ export async function getGroup(groupId: string) {
   return db.query.groups.findFirst({ where: eq(groups.id, groupId) });
 }
 
+/**
+ * Resolve a cohort invite code to its group — only *active* groups are joinable.
+ * Used by the public /join self-registration flow, so it returns just what that
+ * flow needs (id + name), never the roster.
+ */
+export async function getGroupByJoinCode(code: string) {
+  return db.query.groups.findFirst({
+    where: and(eq(groups.joinCode, code), eq(groups.status, "active")),
+    columns: { id: true, name: true, status: true },
+  });
+}
+
 /** Full group detail: roster (members + users), assignments, and notes. */
 export async function getGroupDetail(groupId: string) {
   return db.query.groups.findFirst({

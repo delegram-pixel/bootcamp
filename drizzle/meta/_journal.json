@@ -15,6 +15,13 @@
       "when": 1787301553401,
       "tag": "0001_mysterious_nitro",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787317282831,
+      "tag": "0002_flat_gladiator",
+      "breakpoints": true
     }
   ]
 }

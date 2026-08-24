@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { db } from "@/db";
 import { groups } from "@/db/schema";
+import { newJoinCode } from "@/lib/auth/join-code";
 import { guardedAction, ok, type ActionResult } from "@/lib/actions/types";
 import {
   groupCreateSchema,
@@ -77,5 +78,32 @@ export async function deleteGroup(
     await db.delete(groups).where(eq(groups.id, data.id));
     revalidateGroups();
     return ok(undefined, "Group deleted");
+  });
+}
+
+/**
+ * Create (or rotate) a cohort's shareable invite link. Regenerating replaces the
+ * old code, so any previously shared link stops working. Returns the fresh code
+ * so the UI can display the full link immediately.
+ */
+export async function generateJoinCode(
+  input: z.infer<typeof idSchema>,
+): Promise<ActionResult<{ code: string }>> {
+  return guardedAction({ ...ADMIN, schema: idSchema, input }, async (data) => {
+    const code = newJoinCode();
+    await db.update(groups).set({ joinCode: code }).where(eq(groups.id, data.id));
+    revalidateGroups(data.id);
+    return ok({ code }, "Invite link ready");
+  });
+}
+
+/** Turn off a cohort's invite link — clears the code so /join stops accepting it. */
+export async function disableJoinCode(
+  input: z.infer<typeof idSchema>,
+): Promise<ActionResult> {
+  return guardedAction({ ...ADMIN, schema: idSchema, input }, async (data) => {
+    await db.update(groups).set({ joinCode: null }).where(eq(groups.id, data.id));
+    revalidateGroups(data.id);
+    return ok(undefined, "Invite link turned off");
   });
 }

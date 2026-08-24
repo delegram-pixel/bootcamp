@@ -278,3 +278,23 @@ export const resetPasswordSchema = z
     path: ["confirmPassword"],
   });
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+/**
+ * Student self-registration via a cohort's shared invite link. `code` is the
+ * join code carried in the /join URL — the action re-checks it server-side and
+ * hard-codes the `intern` role (never trusts the client for it). Same
+ * confirm-password refine as `resetPasswordSchema`.
+ */
+export const joinSchema = z
+  .object({
+    code: z.string().min(1),
+    name: z.string().trim().min(1, "Enter your name").max(120),
+    email: z.email("Enter a valid email"),
+    password: z.string().min(8, "At least 8 characters").max(200),
+    confirmPassword: z.string().min(1, "Confirm your password"),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+export type JoinInput = z.infer<typeof joinSchema>;

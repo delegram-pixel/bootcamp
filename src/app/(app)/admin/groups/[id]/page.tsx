@@ -22,6 +22,8 @@ import { PageHeader } from "@/components/page-header";
 import { AddMemberDialog } from "@/components/admin/add-member-dialog";
 import { MemberActions } from "@/components/admin/member-actions";
 import { GroupActions } from "@/components/admin/group-actions";
+import { GroupJoinLink } from "@/components/admin/group-join-link";
+import { env } from "@/lib/env";
 
 export const metadata = { title: "Group" };
 
@@ -61,6 +63,18 @@ export default async function GroupDetailPage({
           redirectOnDelete
         />
       </PageHeader>
+
+      <div className="mb-6">
+        <GroupJoinLink
+          groupId={group.id}
+          groupName={group.name}
+          url={
+            group.joinCode
+              ? `${env.APP_URL.replace(/\/$/, "")}/join?code=${group.joinCode}`
+              : null
+          }
+        />
+      </div>
 
       {/* Roster */}
       <section className="space-y-3">
