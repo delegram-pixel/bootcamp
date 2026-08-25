@@ -1,104 +1,25 @@
 import Link from "next/link";
 import {
   CheckCircle2Icon,
-  ChevronRightIcon,
   ClockIcon,
   LayersIcon,
   ListTodoIcon,
   SparklesIcon,
 } from "lucide-react";
 
-import { getInternDashboard, type InternAssignmentItem } from "@/db/queries/dashboard";
+import { getInternDashboard } from "@/db/queries/dashboard";
 import { getMyGroups } from "@/db/queries/groups";
 import { requireUser } from "@/lib/authz";
-import { dueLabel } from "@/lib/format";
-import {
-  internActionState,
-  needsAction,
-  submissionStatusMeta,
-} from "@/lib/submission-status";
+import { internActionState, needsAction } from "@/lib/submission-status";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { SectionHeading } from "@/components/section-heading";
+import { AssignmentRow } from "@/components/intern/assignment-row";
+import { DashboardIntro } from "@/components/intern/dashboard-intro";
 
 export const metadata = { title: "Dashboard" };
-
-function StatusBadge({ item }: { item: InternAssignmentItem }) {
-  if (item.status === null) {
-    return <Badge variant="outline">Not started</Badge>;
-  }
-  const meta = submissionStatusMeta[item.status];
-  return <Badge variant={meta.variant}>{meta.label}</Badge>;
-}
-
-function AssignmentRow({
-  item,
-  showScore = false,
-}: {
-  item: InternAssignmentItem;
-  showScore?: boolean;
-}) {
-  const due = dueLabel(item.dueAt);
-  return (
-    <li>
-      <Link href={`/assignments/${item.id}`} className="block">
-        <Card className="transition-colors hover:border-primary/40">
-          <CardContent className="flex items-center justify-between gap-3 py-3">
-            <div className="min-w-0 space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="truncate font-medium">{item.title}</span>
-                <StatusBadge item={item} />
-              </div>
-              <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
-                <span>{item.groupName}</span>
-                <span aria-hidden>·</span>
-                <span className={due.tone === "over" ? "text-destructive" : undefined}>
-                  {due.text}
-                </span>
-                {showScore && item.score != null ? (
-                  <>
-                    <span aria-hidden>·</span>
-                    <span className="text-foreground font-medium">
-                      Scored {item.score}
-                      {item.points != null ? `/${item.points}` : ""}
-                    </span>
-                  </>
-                ) : item.points != null ? (
-                  <>
-                    <span aria-hidden>·</span>
-                    <span>{item.points} pts</span>
-                  </>
-                ) : null}
-              </div>
-            </div>
-            <ChevronRightIcon className="text-muted-foreground size-4 shrink-0" />
-          </CardContent>
-        </Card>
-      </Link>
-    </li>
-  );
-}
-
-function SectionHeading({
-  icon: Icon,
-  children,
-  count,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  children: React.ReactNode;
-  count?: number;
-}) {
-  return (
-    <h2 className="flex items-center gap-2 text-sm font-medium">
-      <Icon className="size-4" />
-      {children}
-      {count != null ? (
-        <span className="text-muted-foreground font-normal">({count})</span>
-      ) : null}
-    </h2>
-  );
-}
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -119,6 +40,8 @@ export default async function DashboardPage() {
         description="What needs your attention, and where your work stands."
       />
 
+      <DashboardIntro />
+
       {groups.length === 0 ? (
         <EmptyState
           icon={LayersIcon}
@@ -135,7 +58,7 @@ export default async function DashboardPage() {
             {attention.length === 0 ? (
               <EmptyState
                 icon={SparklesIcon}
-                title="You're all caught up"
+                title="You’re all caught up"
                 description="Nothing due right now. New assignments will show up here."
               />
             ) : (

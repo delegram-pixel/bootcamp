@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  ChevronLeftIcon,
   ClipboardListIcon,
   FileIcon,
   LinkIcon,
@@ -19,6 +17,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Markdown } from "@/components/markdown";
 import { PageHeader } from "@/components/page-header";
+import { SectionHeading } from "@/components/section-heading";
+import { BackLink } from "@/components/back-link";
 import { SubmissionComposer } from "@/components/intern/submission-composer";
 import { GradeSummary } from "@/components/submission/grade-summary";
 import { CommentThread } from "@/components/submission/comment-thread";
@@ -44,13 +44,9 @@ export default async function AssignmentViewPage({
 
   return (
     <>
-      <Link
-        href={`/groups/${assignment.group.id}`}
-        className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-1 text-sm"
-      >
-        <ChevronLeftIcon className="size-4" />
+      <BackLink href={`/groups/${assignment.group.id}`}>
         {assignment.group.name}
-      </Link>
+      </BackLink>
 
       <PageHeader title={assignment.title}>
         {assignment.points != null ? (
@@ -83,10 +79,7 @@ export default async function AssignmentViewPage({
         {/* Attachments */}
         {assignment.attachments.length > 0 ? (
           <section className="space-y-3">
-            <h2 className="flex items-center gap-2 text-sm font-medium">
-              <PaperclipIcon className="size-4" />
-              Attachments
-            </h2>
+            <SectionHeading icon={PaperclipIcon}>Attachments</SectionHeading>
             <ul className="divide-y rounded-lg border">
               {assignment.attachments.map((a) => (
                 <li key={a.id} className="flex items-center gap-3 p-3">
@@ -113,10 +106,9 @@ export default async function AssignmentViewPage({
         {criteria.length > 0 ? (
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-sm font-medium">
-                <ClipboardListIcon className="size-4" />
+              <SectionHeading icon={ClipboardListIcon}>
                 How you’ll be graded
-              </h2>
+              </SectionHeading>
               <span className="text-muted-foreground text-sm">{rubricTotal} pts total</span>
             </div>
             <ul className="divide-y rounded-lg border">
@@ -163,10 +155,7 @@ export default async function AssignmentViewPage({
         {/* Discussion — open whenever a submission exists */}
         {submission ? (
           <section className="space-y-3">
-            <h2 className="flex items-center gap-2 text-sm font-medium">
-              <MessagesSquareIcon className="size-4" />
-              Discussion
-            </h2>
+            <SectionHeading icon={MessagesSquareIcon}>Discussion</SectionHeading>
             <CommentThread
               submissionId={submission.id}
               comments={submission.comments}

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { MenuIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { NAV_ICONS, type NavIconKey } from "@/components/nav-icons";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -24,7 +25,7 @@ import {
 export function MobileNav({
   links,
 }: {
-  links: { href: string; label: string }[];
+  links: { href: string; label: string; icon?: NavIconKey }[];
 }) {
   const pathname = usePathname();
 
@@ -49,17 +50,19 @@ export function MobileNav({
             const active =
               pathname === l.href ||
               (l.href !== "/" && pathname.startsWith(l.href));
+            const Icon = l.icon ? NAV_ICONS[l.icon] : null;
             return (
               <SheetClose asChild key={l.href}>
                 <Link
                   href={l.href}
                   className={cn(
-                    "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                     active
                       ? "bg-muted text-foreground"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
+                  {Icon ? <Icon className="size-4" /> : null}
                   {l.label}
                 </Link>
               </SheetClose>

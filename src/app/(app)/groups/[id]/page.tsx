@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
 import { Markdown } from "@/components/markdown";
 import { PageHeader } from "@/components/page-header";
+import { SectionHeading } from "@/components/section-heading";
+import { BackLink } from "@/components/back-link";
 
 export const metadata = { title: "Group" };
 
@@ -25,6 +27,7 @@ export default async function GroupHomePage({
 
   return (
     <>
+      <BackLink href="/dashboard">Dashboard</BackLink>
       <PageHeader title={group.name} description={group.description ?? undefined}>
         <Badge variant="secondary">You’re a {group.roleInGroup} here</Badge>
       </PageHeader>
@@ -32,13 +35,9 @@ export default async function GroupHomePage({
       <div className="space-y-10">
         {/* Assignments */}
         <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-sm font-medium">
-            <FileTextIcon className="size-4" />
+          <SectionHeading icon={FileTextIcon} count={group.assignments.length}>
             Assignments
-            <span className="text-muted-foreground font-normal">
-              ({group.assignments.length})
-            </span>
-          </h2>
+          </SectionHeading>
           {group.assignments.length === 0 ? (
             <EmptyState
               icon={FileTextIcon}
@@ -80,11 +79,9 @@ export default async function GroupHomePage({
 
         {/* Notes */}
         <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-sm font-medium">
-            <NotebookPenIcon className="size-4" />
+          <SectionHeading icon={NotebookPenIcon} count={group.notes.length}>
             Notes
-            <span className="text-muted-foreground font-normal">({group.notes.length})</span>
-          </h2>
+          </SectionHeading>
           {group.notes.length === 0 ? (
             <p className="text-muted-foreground text-sm">No notes shared yet.</p>
           ) : (

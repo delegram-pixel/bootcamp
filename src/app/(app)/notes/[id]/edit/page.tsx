@@ -1,12 +1,12 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeftIcon, PaperclipIcon } from "lucide-react";
+import { PaperclipIcon } from "lucide-react";
 
 import { getNote } from "@/db/queries/notes";
 import { listGroups } from "@/db/queries/groups";
 import { requireAdmin } from "@/lib/authz";
 import { features } from "@/lib/env";
 import { PageHeader } from "@/components/page-header";
+import { BackLink } from "@/components/back-link";
 import { Separator } from "@/components/ui/separator";
 import { NoteForm } from "@/components/admin/note-form";
 import { NoteAttachmentManager } from "@/components/admin/note-attachment-manager";
@@ -26,13 +26,7 @@ export default async function EditNotePage({
 
   return (
     <>
-      <Link
-        href="/notes"
-        className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-1 text-sm"
-      >
-        <ChevronLeftIcon className="size-4" />
-        Notes
-      </Link>
+      <BackLink href="/notes">Notes</BackLink>
       <PageHeader
         title="Edit note"
         description="Update this note’s content, audience, or week."

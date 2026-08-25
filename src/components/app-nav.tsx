@@ -5,21 +5,25 @@ import type { SessionUser } from "@/lib/authz";
 import { getUnreadNotificationCount } from "@/db/queries/notifications";
 import { MobileNav } from "@/components/mobile-nav";
 import { NavLink } from "@/components/nav-link";
+import { type NavIconKey } from "@/components/nav-icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 
-const internLinks = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/notes", label: "Notes" },
-  { href: "/announcements", label: "Announcements" },
+type NavItem = { href: string; label: string; icon: NavIconKey };
+
+const internLinks: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
+  { href: "/assignments", label: "Assignments", icon: "assignments" },
+  { href: "/notes", label: "Notes", icon: "notes" },
+  { href: "/announcements", label: "Announcements", icon: "announcements" },
 ];
 
-const adminLinks = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/groups", label: "Groups" },
-  { href: "/admin/members", label: "Members" },
-  { href: "/notes", label: "Notes" },
-  { href: "/announcements", label: "Announcements" },
+const adminLinks: NavItem[] = [
+  { href: "/admin", label: "Overview", icon: "overview" },
+  { href: "/admin/groups", label: "Groups", icon: "groups" },
+  { href: "/admin/members", label: "Members", icon: "members" },
+  { href: "/notes", label: "Notes", icon: "notes" },
+  { href: "/announcements", label: "Announcements", icon: "announcements" },
 ];
 
 export async function AppNav({ user }: { user: SessionUser }) {
@@ -38,7 +42,7 @@ export async function AppNav({ user }: { user: SessionUser }) {
 
         <nav className="hidden items-center gap-1 sm:flex">
           {links.map((l) => (
-            <NavLink key={l.href} href={l.href}>
+            <NavLink key={l.href} href={l.href} icon={l.icon}>
               {l.label}
             </NavLink>
           ))}
