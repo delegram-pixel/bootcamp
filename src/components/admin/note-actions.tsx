@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { MoreVerticalIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
@@ -21,16 +22,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { EditNoteDialog, type NoteValues } from "@/components/admin/edit-note-dialog";
 
-export function NoteActions({
-  note,
-  groups,
-}: {
-  note: NoteValues;
-  groups: { id: string; name: string }[];
-}) {
-  const [editOpen, setEditOpen] = useState(false);
+export function NoteActions({ note }: { note: { id: string; title: string } }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -55,9 +48,11 @@ export function NoteActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
-            <PencilIcon className="size-4" />
-            Edit
+          <DropdownMenuItem asChild>
+            <Link href={`/notes/${note.id}/edit`}>
+              <PencilIcon className="size-4" />
+              Edit
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
@@ -66,13 +61,6 @@ export function NoteActions({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <EditNoteDialog
-        note={note}
-        groups={groups}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-      />
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>

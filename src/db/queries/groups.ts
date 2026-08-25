@@ -73,7 +73,7 @@ export async function getGroupDetail(groupId: string) {
         columns: { id: true, title: true, status: true, dueAt: true, points: true },
         orderBy: [desc(assignments.createdAt)],
       },
-      notes: { columns: { id: true, title: true, week: true, createdAt: true } },
+      notes: { columns: { id: true, title: true, weekNumber: true, createdAt: true } },
     },
   });
 }

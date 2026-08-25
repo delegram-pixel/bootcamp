@@ -291,10 +291,26 @@ export const notes = pgTable("note", {
   title: text("title").notNull(),
   bodyMd: text("body_md").notNull(),
   week: text("week"),
+  weekNumber: integer("week_number"),
   topic: text("topic"),
   createdById: text("created_by_id")
     .notNull()
     .references(() => users.id),
+  createdAt: createdAt(),
+});
+
+/** Files/images/links attached to a note. Mirror of `assignmentAttachments`. */
+export const noteAttachments = pgTable("note_attachment", {
+  id: uuid().primaryKey(),
+  noteId: text("note_id")
+    .notNull()
+    .references(() => notes.id, { onDelete: "cascade" }),
+  kind: attachmentKind("kind").notNull(),
+  label: text("label").notNull(),
+  url: text("url").notNull(),
+  fileKey: text("file_key"),
+  mime: text("mime"),
+  size: integer("size"),
   createdAt: createdAt(),
 });
 
@@ -419,9 +435,14 @@ export const commentsRelations = relations(comments, ({ one }) => ({
   author: one(users, { fields: [comments.authorId], references: [users.id] }),
 }));
 
-export const notesRelations = relations(notes, ({ one }) => ({
+export const notesRelations = relations(notes, ({ one, many }) => ({
   group: one(groups, { fields: [notes.groupId], references: [groups.id] }),
   createdBy: one(users, { fields: [notes.createdById], references: [users.id] }),
+  attachments: many(noteAttachments),
+}));
+
+export const noteAttachmentsRelations = relations(noteAttachments, ({ one }) => ({
+  note: one(notes, { fields: [noteAttachments.noteId], references: [notes.id] }),
 }));
 
 export const announcementsRelations = relations(announcements, ({ one }) => ({
@@ -444,6 +465,7 @@ export type Grade = typeof grades.$inferSelect;
 export type CriterionScore = typeof criterionScores.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
 export type Note = typeof notes.$inferSelect;
+export type NoteAttachment = typeof noteAttachments.$inferSelect;
 export type Announcement = typeof announcements.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;

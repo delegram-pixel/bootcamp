@@ -171,6 +171,7 @@ async function main() {
           "Welcome! This portal is where you'll find **notes**, **assignments**, and your **feedback**.\n\n" +
           "1. Check your Dashboard for what's due\n2. Submit work as a link, file, text, or GitHub repo\n3. Watch for graded feedback and comments",
         week: "Week 0",
+        weekNumber: 0,
         topic: "Orientation",
         createdById: "u-admin",
       },
@@ -184,6 +185,7 @@ async function main() {
           "- One `h1` per page; don't skip heading levels\n" +
           "- Buttons for actions, links for navigation",
         week: "Week 1",
+        weekNumber: 1,
         topic: "HTML",
         createdById: "u-admin",
       },

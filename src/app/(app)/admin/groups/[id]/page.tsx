@@ -214,7 +214,7 @@ export default async function GroupDetailPage({
                       <div className="min-w-0">
                         <div className="truncate font-medium">{n.title}</div>
                         <div className="text-muted-foreground text-xs">
-                          {n.week ? `${n.week} · ` : ""}
+                          {n.weekNumber != null ? `Week ${n.weekNumber} · ` : ""}
                           {formatDate(n.createdAt)}
                         </div>
                       </div>

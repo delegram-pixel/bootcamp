@@ -224,9 +224,18 @@ export type CommentCreateInput = z.infer<typeof commentCreateSchema>;
 
 export const noteFormSchema = z.object({
   title: z.string().trim().min(2, "Title is too short").max(160),
-  bodyMd: z.string().trim().min(1, "Write something").max(20000),
+  // Optional: a note can be just a title + attachments (e.g. a single PDF), so an
+  // empty body is allowed. The column is NOT NULL, so the action stores "".
+  bodyMd: z.string().trim().max(20000),
   groupId: z.string(), // "" = all groups (global), else a group id
-  week: z.string().trim().max(40).optional().or(z.literal("")),
+  // A week number (1–99) typed as a string in the form; the action stores it as
+  // an integer for ordering. "" / undefined means "no week" (the General group).
+  weekNumber: z
+    .string()
+    .trim()
+    .regex(/^[1-9][0-9]?$/, "Use a week number, e.g. 2")
+    .optional()
+    .or(z.literal("")),
   topic: z.string().trim().max(80).optional().or(z.literal("")),
 });
 export type NoteFormInput = z.infer<typeof noteFormSchema>;
@@ -234,6 +243,33 @@ export type NoteFormInput = z.infer<typeof noteFormSchema>;
 export const noteCreateSchema = noteFormSchema;
 export const noteUpdateSchema = noteFormSchema.extend({ id: z.string().min(1) });
 export type NoteUpdateInput = z.infer<typeof noteUpdateSchema>;
+
+/* -------------------------------------------------------- note attachments */
+
+/** A link resource on a note (always available — no upload provider needed). */
+export const noteAttachmentLinkSchema = z.object({
+  noteId: z.string().min(1),
+  label: z.string().trim().min(1, "Required").max(160),
+  url: z.url("Enter a valid URL"),
+});
+export type NoteAttachmentLinkInput = z.infer<typeof noteAttachmentLinkSchema>;
+
+/** A file/image resource, recorded after UploadThing returns its url + key. */
+export const noteAttachmentFileSchema = z.object({
+  noteId: z.string().min(1),
+  label: z.string().trim().min(1).max(255),
+  url: z.url(),
+  fileKey: z.string().min(1),
+  mime: z.string().max(255).optional(),
+  size: z.number().int().nonnegative().optional(),
+});
+export type NoteAttachmentFileInput = z.infer<typeof noteAttachmentFileSchema>;
+
+export const removeNoteAttachmentSchema = z.object({
+  id: z.string().min(1),
+  noteId: z.string().min(1),
+});
+export type RemoveNoteAttachmentInput = z.infer<typeof removeNoteAttachmentSchema>;
 
 /* ---------------------------------------------------------- announcements */
 

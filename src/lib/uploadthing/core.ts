@@ -28,6 +28,25 @@ export const ourFileRouter = {
     }),
 
   /**
+   * Note resources (files/images admins attach to lesson notes). Same admin-only
+   * gate as assignment attachments; the row is persisted by the authorized
+   * `addNoteAttachmentFile` action from the client's onComplete.
+   */
+  noteAttachment: f({
+    blob: { maxFileSize: "32MB", maxFileCount: 10 },
+  })
+    .middleware(async () => {
+      const user = await getCurrentUser();
+      if (!user || user.role !== "admin") {
+        throw new UploadThingError("Not authorized to upload here.");
+      }
+      return { userId: user.id };
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: file.url, key: file.key, name: file.name, size: file.size };
+    }),
+
+  /**
    * Intern submission files. Any signed-in user may upload; the *real* gate — is
    * this intern allowed to submit to this assignment? — runs in the authorized
    * `addSubmissionFile` action that persists the row from onClientUploadComplete.

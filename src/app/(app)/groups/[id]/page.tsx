@@ -97,7 +97,9 @@ export default async function GroupHomePage({
                       {note.groupId === null ? (
                         <Badge variant="outline">All groups</Badge>
                       ) : null}
-                      {note.week ? <Badge variant="outline">{note.week}</Badge> : null}
+                      {note.weekNumber != null ? (
+                        <Badge variant="outline">Week {note.weekNumber}</Badge>
+                      ) : null}
                       {note.topic ? <Badge variant="outline">{note.topic}</Badge> : null}
                       <span className="text-muted-foreground ml-auto text-xs">
                         {formatDate(note.createdAt)}
