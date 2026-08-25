@@ -39,7 +39,7 @@ export default async function AdminOverviewPage() {
   const stats = [
     { label: "Groups", value: groupCount, icon: LayersIcon, href: "/admin/groups" },
     { label: "Interns", value: internCount, icon: UsersIcon, href: "/admin/members" },
-    { label: "Published assignments", value: publishedCount, icon: FileTextIcon, href: "/admin/groups" },
+    { label: "Published assignments", value: publishedCount, icon: FileTextIcon, href: "/admin/assignments" },
     { label: "Awaiting grading", value: awaitingCount, icon: ClipboardCheckIcon, href: "#needs-grading" },
   ];
 

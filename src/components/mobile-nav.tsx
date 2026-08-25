@@ -25,7 +25,7 @@ import {
 export function MobileNav({
   links,
 }: {
-  links: { href: string; label: string; icon?: NavIconKey }[];
+  links: { href: string; label: string; icon?: NavIconKey; exact?: boolean }[];
 }) {
   const pathname = usePathname();
 
@@ -47,9 +47,10 @@ export function MobileNav({
         </SheetHeader>
         <nav className="flex flex-col gap-1 px-2">
           {links.map((l) => {
-            const active =
-              pathname === l.href ||
-              (l.href !== "/" && pathname.startsWith(l.href));
+            const active = l.exact
+              ? pathname === l.href
+              : pathname === l.href ||
+                (l.href !== "/" && pathname.startsWith(`${l.href}/`));
             const Icon = l.icon ? NAV_ICONS[l.icon] : null;
             return (
               <SheetClose asChild key={l.href}>

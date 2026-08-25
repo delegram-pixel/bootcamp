@@ -9,14 +9,18 @@ import { NAV_ICONS, type NavIconKey } from "@/components/nav-icons";
 export function NavLink({
   href,
   icon,
+  exact,
   children,
 }: {
   href: string;
   icon?: NavIconKey;
+  exact?: boolean;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const active = pathname === href || (href !== "/" && pathname.startsWith(`${href}`));
+  const active = exact
+    ? pathname === href
+    : pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
   const Icon = icon ? NAV_ICONS[icon] : null;
 
   return (

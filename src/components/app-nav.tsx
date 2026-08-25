@@ -9,7 +9,7 @@ import { type NavIconKey } from "@/components/nav-icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 
-type NavItem = { href: string; label: string; icon: NavIconKey };
+type NavItem = { href: string; label: string; icon: NavIconKey; exact?: boolean };
 
 const internLinks: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
@@ -19,9 +19,10 @@ const internLinks: NavItem[] = [
 ];
 
 const adminLinks: NavItem[] = [
-  { href: "/admin", label: "Overview", icon: "overview" },
+  { href: "/admin", label: "Overview", icon: "overview", exact: true },
   { href: "/admin/groups", label: "Groups", icon: "groups" },
   { href: "/admin/members", label: "Members", icon: "members" },
+  { href: "/admin/assignments", label: "Assignments", icon: "assignments" },
   { href: "/notes", label: "Notes", icon: "notes" },
   { href: "/announcements", label: "Announcements", icon: "announcements" },
 ];
@@ -42,7 +43,7 @@ export async function AppNav({ user }: { user: SessionUser }) {
 
         <nav className="hidden items-center gap-1 sm:flex">
           {links.map((l) => (
-            <NavLink key={l.href} href={l.href} icon={l.icon}>
+            <NavLink key={l.href} href={l.href} icon={l.icon} exact={l.exact}>
               {l.label}
             </NavLink>
           ))}

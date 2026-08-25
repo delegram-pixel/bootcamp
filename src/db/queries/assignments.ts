@@ -3,7 +3,7 @@ import "server-only";
 import { and, asc, desc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { assignments, memberships, rubricCriteria } from "@/db/schema";
+import { assignments, groups, memberships, rubricCriteria } from "@/db/schema";
 
 /** For the admin manage page: full assignment with group, rubric, attachments, submissions. */
 export async function getAssignmentManage(id: string) {
@@ -64,4 +64,23 @@ export async function getAssignmentForIntern(userId: string, id: string) {
     columns: { id: true },
   });
   return member ? row : null;
+}
+
+/**
+ * Every cohort with its assignments and each assignment's submission statuses —
+ * powers the admin Assignments hub (grouped by cohort, with a "waiting to grade"
+ * count per assignment). Alphabetical by group; newest assignment first within.
+ */
+export async function listAssignmentsByGroupForAdmin() {
+  return db.query.groups.findMany({
+    orderBy: [asc(groups.name)],
+    columns: { id: true, name: true, status: true },
+    with: {
+      assignments: {
+        orderBy: [desc(assignments.createdAt)],
+        columns: { id: true, title: true, status: true, dueAt: true, points: true },
+        with: { submissions: { columns: { status: true } } },
+      },
+    },
+  });
 }

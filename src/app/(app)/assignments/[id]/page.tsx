@@ -11,10 +11,11 @@ import { getAssignmentForIntern } from "@/db/queries/assignments";
 import { getMySubmission } from "@/db/queries/submissions";
 import { requireUser } from "@/lib/authz";
 import { features } from "@/lib/env";
-import { dueLabel } from "@/lib/format";
+import { dueLabel, formatDateTime } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Countdown } from "@/components/countdown";
 import { Markdown } from "@/components/markdown";
 import { PageHeader } from "@/components/page-header";
 import { SectionHeading } from "@/components/section-heading";
@@ -54,13 +55,16 @@ export default async function AssignmentViewPage({
         ) : null}
       </PageHeader>
 
-      <div
-        className={`mb-6 text-sm ${
-          due.tone === "over" ? "text-destructive" : "text-muted-foreground"
-        }`}
-      >
-        {due.text}
-      </div>
+      {assignment.dueAt ? (
+        <div className="mb-6 space-y-2">
+          <Countdown dueAtMs={assignment.dueAt.getTime()} />
+          <div className="text-muted-foreground text-xs">
+            Due {formatDateTime(assignment.dueAt)}
+          </div>
+        </div>
+      ) : (
+        <div className="text-muted-foreground mb-6 text-sm">No due date</div>
+      )}
 
       <div className="space-y-8">
         {/* Instructions */}
