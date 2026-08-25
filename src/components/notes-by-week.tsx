@@ -88,7 +88,7 @@ export function NotesByWeek({
           </summary>
           <div className="space-y-4 pb-4">
             {group.notes.map((note) => (
-              <Card key={note.id}>
+              <Card key={note.id} className="shadow-sm">
                 <CardHeader>
                   <div className="flex flex-wrap items-center gap-2">
                     <CardTitle>{note.title}</CardTitle>

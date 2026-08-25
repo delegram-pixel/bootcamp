@@ -56,7 +56,7 @@ export default async function AnnouncementsPage() {
       ) : (
         <div className="space-y-4">
           {announcements.map((a) => (
-            <Card key={a.id}>
+            <Card key={a.id} id={`announcement-${a.id}`} className="scroll-mt-24">
               <CardHeader>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={a.group ? "secondary" : "outline"}>

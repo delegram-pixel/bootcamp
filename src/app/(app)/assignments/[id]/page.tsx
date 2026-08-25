@@ -143,18 +143,20 @@ export default async function AssignmentViewPage({
 
         {/* Grade — shown once the mentor has graded */}
         {submission?.grade ? (
-          <GradeSummary
-            score={submission.grade.score}
-            total={scoreDenominator}
-            gradedAt={submission.grade.gradedAt}
-            criteria={criteria}
-            criterionScores={submission.grade.criterionScores}
-          />
+          <div id="grade" className="scroll-mt-24">
+            <GradeSummary
+              score={submission.grade.score}
+              total={scoreDenominator}
+              gradedAt={submission.grade.gradedAt}
+              criteria={criteria}
+              criterionScores={submission.grade.criterionScores}
+            />
+          </div>
         ) : null}
 
         {/* Discussion — open whenever a submission exists */}
         {submission ? (
-          <section className="space-y-3">
+          <section id="discussion" className="scroll-mt-24 space-y-3">
             <SectionHeading icon={MessagesSquareIcon}>Discussion</SectionHeading>
             <CommentThread
               submissionId={submission.id}

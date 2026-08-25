@@ -88,7 +88,7 @@ export default async function GradeSubmissionPage({
         <Separator />
 
         {/* Discussion */}
-        <section className="space-y-3">
+        <section id="discussion" className="scroll-mt-24 space-y-3">
           <h2 className="flex items-center gap-2 text-sm font-medium">
             <MessagesSquareIcon className="size-4" />
             Discussion

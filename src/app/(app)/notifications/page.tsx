@@ -1,5 +1,7 @@
+import Link from "next/link";
 import {
   BellIcon,
+  ChevronRightIcon,
   FileTextIcon,
   GraduationCapIcon,
   MessageSquareIcon,
@@ -48,8 +50,45 @@ function describe(type: NotificationType, payload: Record<string, unknown> | nul
   }
 }
 
+/**
+ * Where a notification points. Most lead to the assignment it's about; a
+ * `comment` goes to wherever that user reads the thread (admins → the grading
+ * screen, interns → their assignment view). Section anchors (`#grade`,
+ * `#discussion`, `#announcement-…`) drop the reader right at the relevant part.
+ * Returns null when the payload lacks the id we'd need to build the link.
+ */
+function notificationHref(
+  type: NotificationType,
+  payload: Record<string, unknown> | null,
+  isAdmin: boolean,
+): string | null {
+  const p = payload ?? {};
+  const assignmentId = typeof p.assignmentId === "string" ? p.assignmentId : null;
+  const submissionId = typeof p.submissionId === "string" ? p.submissionId : null;
+  const announcementId = typeof p.announcementId === "string" ? p.announcementId : null;
+
+  switch (type) {
+    case "assignment_published":
+    case "due_soon":
+    case "returned":
+      return assignmentId ? `/assignments/${assignmentId}` : null;
+    case "graded":
+      return assignmentId ? `/assignments/${assignmentId}#grade` : null;
+    case "comment":
+      if (isAdmin) {
+        return submissionId ? `/admin/submissions/${submissionId}#discussion` : null;
+      }
+      return assignmentId ? `/assignments/${assignmentId}#discussion` : null;
+    case "announcement":
+      return announcementId
+        ? `/announcements#announcement-${announcementId}`
+        : "/announcements";
+  }
+}
+
 export default async function NotificationsPage() {
   const user = await requireUser();
+  const isAdmin = user.role === "admin";
   const items = await listNotifications(user.id);
   const hasUnread = items.some((n) => !n.readAt);
 
@@ -70,14 +109,10 @@ export default async function NotificationsPage() {
           {items.map((n) => {
             const Icon = ICONS[n.type] ?? BellIcon;
             const unread = !n.readAt;
-            return (
-              <li
-                key={n.id}
-                className={cn(
-                  "flex items-start gap-3 p-4",
-                  unread && "bg-muted/40",
-                )}
-              >
+            const href = notificationHref(n.type, n.payloadJson, isAdmin);
+
+            const body = (
+              <>
                 <div className="bg-muted text-muted-foreground mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full">
                   <Icon className="size-4" />
                 </div>
@@ -85,12 +120,34 @@ export default async function NotificationsPage() {
                   <p className="text-sm">{describe(n.type, n.payloadJson)}</p>
                   <p className="text-muted-foreground text-xs">{fromNow(n.createdAt)}</p>
                 </div>
-                {unread ? (
-                  <span
-                    aria-label="Unread"
-                    className="bg-primary mt-2 size-2 shrink-0 rounded-full"
-                  />
+                {unread || href ? (
+                  <div className="flex items-center gap-2 self-center">
+                    {unread ? (
+                      <span
+                        aria-label="Unread"
+                        className="bg-primary size-2 shrink-0 rounded-full"
+                      />
+                    ) : null}
+                    {href ? (
+                      <ChevronRightIcon className="text-muted-foreground size-4 shrink-0" />
+                    ) : null}
+                  </div>
                 ) : null}
+              </>
+            );
+
+            return (
+              <li key={n.id} className={cn(unread && "bg-muted/40")}>
+                {href ? (
+                  <Link
+                    href={href}
+                    className="hover:bg-muted/60 flex items-start gap-3 p-4 transition-colors"
+                  >
+                    {body}
+                  </Link>
+                ) : (
+                  <div className="flex items-start gap-3 p-4">{body}</div>
+                )}
               </li>
             );
           })}
