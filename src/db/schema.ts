@@ -22,6 +22,8 @@ import {
 } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
 
+import type { BadgeKey } from "@/lib/scoring";
+
 const uuid = () => text().$defaultFn(() => crypto.randomUUID());
 const createdAt = () =>
   timestamp("created_at", { mode: "date" }).notNull().defaultNow();
@@ -330,7 +332,9 @@ export type NotificationType =
   | "returned"
   | "comment"
   | "announcement"
-  | "due_soon";
+  | "due_soon"
+  | "badge_earned"
+  | "level_up";
 
 export const notifications = pgTable("notification", {
   id: uuid().primaryKey(),
@@ -342,6 +346,31 @@ export const notifications = pgTable("notification", {
   readAt: timestamp("read_at", { mode: "date" }),
   createdAt: createdAt(),
 });
+
+/* ------------------------------------------------------- gamification */
+
+/**
+ * Badges an intern has been *awarded* — the single piece of scoring state we
+ * persist; grade %, XP, level and the live badge set are all derived on the fly
+ * in `lib/scoring.ts`. This table exists only as a notification ledger: earning
+ * a badge is a pure function of graded work, so after each grade/submit we
+ * recompute the earned set and insert whatever's new here. The unique
+ * (user, badge) key makes that idempotent — a re-grade re-awards nothing and so
+ * fires no duplicate notification. `badgeKey` is typed to the `scoring` registry
+ * so an unknown key can't be stored.
+ */
+export const earnedBadges = pgTable(
+  "earned_badge",
+  {
+    id: uuid().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    badgeKey: text("badge_key").$type<BadgeKey>().notNull(),
+    earnedAt: timestamp("earned_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [unique("earned_badge_user_key_uq").on(t.userId, t.badgeKey)],
+);
 
 /* ---------------------------------------------------------- relations */
 
@@ -468,4 +497,5 @@ export type Note = typeof notes.$inferSelect;
 export type NoteAttachment = typeof noteAttachments.$inferSelect;
 export type Announcement = typeof announcements.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
+export type EarnedBadge = typeof earnedBadges.$inferSelect;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;

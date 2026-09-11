@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRightIcon, FileTextIcon, NotebookPenIcon } from "lucide-react";
+import { ChevronRightIcon, FileTextIcon, NotebookPenIcon, TrophyIcon } from "lucide-react";
 
 import { getGroupForIntern } from "@/db/queries/groups";
 import { requireUser } from "@/lib/authz";
 import { dueLabel, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
 import { Markdown } from "@/components/markdown";
@@ -29,6 +30,12 @@ export default async function GroupHomePage({
     <>
       <BackLink href="/dashboard">Dashboard</BackLink>
       <PageHeader title={group.name} description={group.description ?? undefined}>
+        <Button asChild variant="outline" size="sm">
+          <Link href={`/groups/${group.id}/leaderboard`}>
+            <TrophyIcon className="size-4" />
+            Leaderboard
+          </Link>
+        </Button>
         <Badge variant="secondary">You’re a {group.roleInGroup} here</Badge>
       </PageHeader>
 

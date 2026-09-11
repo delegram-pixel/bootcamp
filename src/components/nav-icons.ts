@@ -1,9 +1,11 @@
 import {
+  BarChart3Icon,
   ClipboardListIcon,
   LayersIcon,
   LayoutDashboardIcon,
   MegaphoneIcon,
   NotebookPenIcon,
+  TrophyIcon,
   UsersIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -18,18 +20,22 @@ import {
 export type NavIconKey =
   | "dashboard"
   | "assignments"
+  | "progress"
   | "notes"
   | "announcements"
   | "overview"
+  | "standings"
   | "groups"
   | "members";
 
 export const NAV_ICONS: Record<NavIconKey, LucideIcon> = {
   dashboard: LayoutDashboardIcon,
   assignments: ClipboardListIcon,
+  progress: TrophyIcon,
   notes: NotebookPenIcon,
   announcements: MegaphoneIcon,
   overview: LayoutDashboardIcon,
+  standings: BarChart3Icon,
   groups: LayersIcon,
   members: UsersIcon,
 };

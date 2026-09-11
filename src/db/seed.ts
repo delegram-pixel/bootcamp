@@ -1,10 +1,11 @@
 /**
  * Seed data for the Intern Portal.
  *
- * Creates the cast from BUILD_PROMPT: 1 admin, 4 interns, 2 groups, 2 published
- * assignments (one with a rubric), notes, and a spread of sample submissions —
- * including one fully graded submission with a comment thread so the whole
- * post → submit → grade → feedback loop is visible immediately after seeding.
+ * Creates the cast from BUILD_PROMPT: 1 admin, 4 interns, 2 groups, four
+ * published assignments (one with a rubric), notes, and a spread of sample
+ * submissions — including several fully graded submissions (one with a comment
+ * thread) so the whole post → submit → grade → feedback loop, and the derived
+ * standing / XP / badges, are all visible immediately after seeding.
  *
  * IDs are fixed and deterministic so re-seeding is idempotent and dev-login
  * sessions (which carry a user id in the JWT) stay valid across reseeds.
@@ -142,6 +143,32 @@ async function main() {
         publishedAt: days(-3),
         createdById: "u-admin",
       },
+      {
+        id: "a-css",
+        groupId: "g-fe",
+        title: "Style a component library with CSS",
+        descriptionMd:
+          "Build a small, reusable component library with modern CSS.\n\n" +
+          "- Buttons, cards, and form inputs\n- Consistent spacing scale and tokens\n- A light/dark theme toggle",
+        dueAt: days(-7),
+        points: 20,
+        status: "published",
+        publishedAt: days(-20),
+        createdById: "u-admin",
+      },
+      {
+        id: "a-js",
+        groupId: "g-fe",
+        title: "Add interactivity with vanilla JS",
+        descriptionMd:
+          "Add keyboard-accessible interactivity without a framework.\n\n" +
+          "- A tabs widget and a modal dialog\n- Full keyboard support and focus management\n- No external libraries",
+        dueAt: days(-1),
+        points: 30,
+        status: "published",
+        publishedAt: days(-20),
+        createdById: "u-admin",
+      },
     ]);
 
     await tx.insert(assignmentAttachments).values([
@@ -215,7 +242,12 @@ async function main() {
 
     /* ----------------------------------------------- submissions */
     await tx.insert(submissions).values([
-      { id: "s-ava-html", assignmentId: "a-html", internId: "u-ava", status: "submitted", submittedAt: days(-3) },
+      // Ava: three graded submissions across three consecutive weeks — powers a
+      // streak plus enough graded, varied work for the high-flyer / polyglot /
+      // perfect-score badges and a higher level than Ben.
+      { id: "s-ava-html", assignmentId: "a-html", internId: "u-ava", status: "graded", submittedAt: days(-16) },
+      { id: "s-ava-css", assignmentId: "a-css", internId: "u-ava", status: "graded", submittedAt: days(-9) },
+      { id: "s-ava-js", assignmentId: "a-js", internId: "u-ava", status: "graded", submittedAt: days(-2) },
       { id: "s-ben-html", assignmentId: "a-html", internId: "u-ben", status: "graded", submittedAt: days(-4) },
       { id: "s-cara-api", assignmentId: "a-api", internId: "u-cara", status: "submitted", submittedAt: days(-1) },
       { id: "s-dan-html", assignmentId: "a-html", internId: "u-dan", status: "draft" },
@@ -234,6 +266,22 @@ async function main() {
         submissionId: "s-ava-html",
         kind: "text",
         content: "Deployed at https://ava-landing.vercel.app — feedback welcome on the mobile nav.",
+      },
+      // Ava's later submissions use different formats — enough kinds for Polyglot.
+      {
+        submissionId: "s-ava-css",
+        kind: "file",
+        url: "https://utfs.io/f/example-ava-components.zip",
+        fileKey: "example-ava-components.zip",
+        content: "component-library.zip",
+        mime: "application/zip",
+        size: 96_500,
+      },
+      {
+        submissionId: "s-ava-js",
+        kind: "link",
+        url: "https://ava-interactive.vercel.app",
+        content: "Live demo — keyboard-accessible tabs + modal",
       },
       // Ben: an uploaded file (mock UploadThing url/key).
       {
@@ -268,11 +316,17 @@ async function main() {
     /* -------------------------------------- grade + feedback (Ben) */
     await tx.insert(grades).values([
       { id: "gr-ben", submissionId: "s-ben-html", score: 21, gradedById: "u-admin", gradedAt: days(-2) },
+      { id: "gr-ava-html", submissionId: "s-ava-html", score: 24, gradedById: "u-admin", gradedAt: days(-14) },
+      { id: "gr-ava-css", submissionId: "s-ava-css", score: 20, gradedById: "u-admin", gradedAt: days(-7) },
+      { id: "gr-ava-js", submissionId: "s-ava-js", score: 28, gradedById: "u-admin", gradedAt: days(-1) },
     ]);
     await tx.insert(criterionScores).values([
       { gradeId: "gr-ben", criterionId: "rc-1", points: 9, comment: "Great use of landmarks." },
       { gradeId: "gr-ben", criterionId: "rc-2", points: 8, comment: "Breakpoints solid; watch the 768px gap." },
       { gradeId: "gr-ben", criterionId: "rc-3", points: 4, comment: "Add alt text to the hero image." },
+      { gradeId: "gr-ava-html", criterionId: "rc-1", points: 10, comment: "Textbook landmark structure." },
+      { gradeId: "gr-ava-html", criterionId: "rc-2", points: 9, comment: "Fluid down to 320px — nicely done." },
+      { gradeId: "gr-ava-html", criterionId: "rc-3", points: 5, comment: "Full marks: labels, alt text, and contrast all there." },
     ]);
     await tx.insert(comments).values([
       {

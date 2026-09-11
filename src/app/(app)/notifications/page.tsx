@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  AwardIcon,
   BellIcon,
   ChevronRightIcon,
   FileTextIcon,
@@ -7,6 +8,7 @@ import {
   MessageSquareIcon,
   MegaphoneIcon,
   ClockIcon,
+  TrendingUpIcon,
   Undo2Icon,
 } from "lucide-react";
 
@@ -28,12 +30,16 @@ const ICONS: Record<NotificationType, React.ComponentType<{ className?: string }
   comment: MessageSquareIcon,
   announcement: MegaphoneIcon,
   due_soon: ClockIcon,
+  badge_earned: AwardIcon,
+  level_up: TrendingUpIcon,
 };
 
 /** Turn a notification's type + payload into a one-line message. */
 function describe(type: NotificationType, payload: Record<string, unknown> | null): string {
   const p = payload ?? {};
   const title = typeof p.title === "string" ? p.title : undefined;
+  const label = typeof p.label === "string" ? p.label : undefined;
+  const level = typeof p.level === "number" ? p.level : undefined;
   switch (type) {
     case "assignment_published":
       return title ? `New assignment: ${title}` : "A new assignment was published";
@@ -47,6 +53,10 @@ function describe(type: NotificationType, payload: Record<string, unknown> | nul
       return title ? `Announcement: ${title}` : "A new announcement was posted";
     case "due_soon":
       return title ? `Due soon: ${title}` : "An assignment is due soon";
+    case "badge_earned":
+      return label ? `Badge unlocked: ${label}` : "You earned a new badge";
+    case "level_up":
+      return level != null ? `You reached level ${level}` : "You leveled up";
   }
 }
 
@@ -83,6 +93,10 @@ function notificationHref(
       return announcementId
         ? `/announcements#announcement-${announcementId}`
         : "/announcements";
+    case "badge_earned":
+    case "level_up":
+      // Badges and levels live on the intern's progress page.
+      return "/progress";
   }
 }
 

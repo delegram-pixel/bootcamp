@@ -14,6 +14,7 @@ type NavItem = { href: string; label: string; icon: NavIconKey; exact?: boolean 
 const internLinks: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/assignments", label: "Assignments", icon: "assignments" },
+  { href: "/progress", label: "Progress", icon: "progress" },
   { href: "/notes", label: "Notes", icon: "notes" },
   { href: "/announcements", label: "Announcements", icon: "announcements" },
 ];
@@ -23,6 +24,7 @@ const adminLinks: NavItem[] = [
   { href: "/admin/groups", label: "Groups", icon: "groups" },
   { href: "/admin/members", label: "Members", icon: "members" },
   { href: "/admin/assignments", label: "Assignments", icon: "assignments" },
+  { href: "/admin/standings", label: "Standings", icon: "standings" },
   { href: "/notes", label: "Notes", icon: "notes" },
   { href: "/announcements", label: "Announcements", icon: "announcements" },
 ];

@@ -17,6 +17,7 @@ import {
   zodFieldErrors,
   type ActionResult,
 } from "@/lib/actions/types";
+import { recordScoringMilestones } from "@/lib/scoring-events";
 import {
   assignmentRefSchema,
   removeSubmissionItemSchema,
@@ -306,6 +307,14 @@ export async function submitSubmission(
         .update(submissions)
         .set({ status, submittedAt: now, updatedAt: now })
         .where(eq(submissions.id, sub.id));
+
+      // A submission can newly satisfy submission-based badges (first
+      // submission, a weekly streak, polyglot, all-caught-up). Best-effort and
+      // no level check — XP only moves on grading. The intern is the actor, so
+      // they're the one notified.
+      await recordScoringMilestones({
+        intern: { id: userId, email: null, name: null },
+      });
 
       // Seam: Phase 6 notifies the group's mentors here.
       revalidateSubmission(data.assignmentId);

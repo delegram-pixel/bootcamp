@@ -28,6 +28,7 @@ import {
   notify,
   type Recipient,
 } from "@/lib/notify";
+import { currentLevel, recordScoringMilestones } from "@/lib/scoring-events";
 import {
   GradedEmail,
   ReturnedEmail,
@@ -167,6 +168,10 @@ export async function gradeSubmission(
       score = data.overallScore;
     }
 
+    // Capture the intern's level before this grade lands, so we can tell
+    // afterward whether it pushed them across a threshold.
+    const previousLevel = await currentLevel(ctx.internId);
+
     // Upsert the grade (one per submission), then replace its criterion scores.
     const now = new Date();
     const [grade] = await db
@@ -229,6 +234,11 @@ export async function gradeSubmission(
         }),
       }),
     });
+
+    // Award any newly-earned badges and a level-up if this grade crossed a
+    // threshold. Best-effort — recomputed from the just-written state, wrapped
+    // so it can never block or roll back the grade.
+    await recordScoringMilestones({ intern: ctx.intern, previousLevel });
 
     revalidateSubmission(ctx);
     return ok(undefined, `Graded — ${score} pts`);
