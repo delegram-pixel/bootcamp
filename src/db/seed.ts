@@ -195,7 +195,7 @@ async function main() {
         groupId: null, // global — visible to everyone
         title: "Welcome to the bootcamp",
         bodyMd:
-          "Welcome! This portal is where you'll find **notes**, **assignments**, and your **feedback**.\n\n" +
+          "Welcome! This portal is where you'll find **notes**, **tasks**, and your **feedback**.\n\n" +
           "1. Check your Dashboard for what's due\n2. Submit work as a link, file, text, or GitHub repo\n3. Watch for graded feedback and comments",
         week: "Week 0",
         weekNumber: 0,
@@ -226,7 +226,7 @@ async function main() {
         authorId: "u-admin",
         bodyMd:
           "👋 **Welcome to the cohort!** Office hours are Tuesdays at 4pm. " +
-          "Check the **Assignments** on your dashboard and don't hesitate to ask questions in the comment thread on any submission.",
+          "Check the **Tasks** on your dashboard and don't hesitate to ask questions in the comment thread on any submission.",
         createdAt: days(-3),
       },
       {
@@ -234,7 +234,7 @@ async function main() {
         groupId: "g-fe",
         authorId: "u-admin",
         bodyMd:
-          "Frontend crew — your first assignment (**semantic landing page**) is live. " +
+          "Frontend crew — your first task (**semantic landing page**) is live. " +
           "Aim to submit a day early so there's time to act on feedback.",
         createdAt: days(-1),
       },

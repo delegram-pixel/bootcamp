@@ -70,7 +70,7 @@ export default async function DashboardPage() {
               <EmptyState
                 icon={SparklesIcon}
                 title="You’re all caught up"
-                description="Nothing due right now. New assignments will show up here."
+                description="Nothing due right now. New tasks will show up here."
               />
             ) : (
               <ul className="space-y-2">

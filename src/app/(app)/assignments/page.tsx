@@ -14,7 +14,7 @@ import { PageHeader } from "@/components/page-header";
 import { SectionHeading } from "@/components/section-heading";
 import { AssignmentRow } from "@/components/intern/assignment-row";
 
-export const metadata = { title: "Assignments" };
+export const metadata = { title: "Tasks" };
 
 export default async function AssignmentsPage() {
   const user = await requireUser();
@@ -27,15 +27,15 @@ export default async function AssignmentsPage() {
   return (
     <>
       <PageHeader
-        title="Assignments"
+        title="Tasks"
         description="All your work across every group, grouped by where it stands."
       />
 
       {items.length === 0 ? (
         <EmptyState
           icon={ClipboardListIcon}
-          title="No assignments yet"
-          description="When your mentor publishes an assignment, it shows up here."
+          title="No tasks yet"
+          description="When your mentor publishes a task, it shows up here."
         />
       ) : (
         <div className="space-y-10">
@@ -48,7 +48,7 @@ export default async function AssignmentsPage() {
               <EmptyState
                 icon={SparklesIcon}
                 title="You’re all caught up"
-                description="Nothing needs doing right now. New assignments will appear here."
+                description="Nothing needs doing right now. New tasks will appear here."
               />
             ) : (
               <ul className="space-y-2">

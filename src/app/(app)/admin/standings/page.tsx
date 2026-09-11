@@ -25,7 +25,7 @@ export default async function AdminStandingsPage() {
         <EmptyState
           icon={TrophyIcon}
           title="No cohorts yet"
-          description="Create a group and publish assignments to start tracking standings."
+          description="Create a group and publish tasks to start tracking standings."
         />
       </>
     );

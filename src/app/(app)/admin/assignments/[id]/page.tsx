@@ -29,7 +29,7 @@ import { PageHeader } from "@/components/page-header";
 import { AssignmentActions } from "@/components/admin/assignment-actions";
 import { AttachmentManager } from "@/components/admin/attachment-manager";
 
-export const metadata = { title: "Assignment" };
+export const metadata = { title: "Task" };
 
 const SUB_STATUS: Record<
   string,

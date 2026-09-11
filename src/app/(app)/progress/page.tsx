@@ -36,7 +36,7 @@ export default async function ProgressPage() {
         <EmptyState
           icon={TrophyIcon}
           title="Nothing to measure yet"
-          description="Once you're in a group with published assignments, your standing shows up here."
+          description="Once you're in a group with published tasks, your standing shows up here."
         />
       </>
     );
@@ -61,7 +61,7 @@ export default async function ProgressPage() {
             label="Overall grade"
             value={gradeValue}
             hint={gradeHint}
-            info="Points earned ÷ points possible across your graded work. Assignments with no point value aren't counted toward it."
+            info="Points earned ÷ points possible across your graded work. Tasks with no point value aren't counted toward it."
             icon={TrophyIcon}
           />
           <StatTile
@@ -93,7 +93,7 @@ export default async function ProgressPage() {
           <div className="space-y-2">
             <div
               role="progressbar"
-              aria-label="Assignment completion"
+              aria-label="Task completion"
               aria-valuenow={progress.completionPct}
               aria-valuemin={0}
               aria-valuemax={100}

@@ -278,7 +278,7 @@ export const BADGES: readonly BadgeDef[] = [
   {
     key: "first-submission",
     label: "First submission",
-    description: "Submitted your first assignment.",
+    description: "Submitted your first task.",
     icon: "send",
     predicate: (c) => c.progress.done >= 1,
   },
@@ -292,14 +292,14 @@ export const BADGES: readonly BadgeDef[] = [
   {
     key: "perfect-score",
     label: "Flawless",
-    description: "Earned full marks on an assignment.",
+    description: "Earned full marks on a task.",
     icon: "star",
     predicate: (c) => c.hasPerfectScore,
   },
   {
     key: "high-flyer",
     label: "High flyer",
-    description: "90%+ overall across 3 or more graded assignments.",
+    description: "90%+ overall across 3 or more graded tasks.",
     icon: "trending-up",
     predicate: (c) => c.grade.pct != null && c.grade.pct >= 90 && c.progress.graded >= 3,
   },

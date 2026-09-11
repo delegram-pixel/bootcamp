@@ -6,7 +6,7 @@ import { getGroup } from "@/db/queries/groups";
 import { PageHeader } from "@/components/page-header";
 import { AssignmentForm } from "@/components/admin/assignment-form";
 
-export const metadata = { title: "New assignment" };
+export const metadata = { title: "New task" };
 
 export default async function NewAssignmentPage({
   params,
@@ -27,7 +27,7 @@ export default async function NewAssignmentPage({
         {group.name}
       </Link>
       <PageHeader
-        title="New assignment"
+        title="New task"
         description={`Create a draft for ${group.name}. It stays hidden from interns until you publish it.`}
       />
       <div className="max-w-3xl">

@@ -64,7 +64,7 @@ export function LeaderboardTable({
                 Grade
                 <InfoHint label="How grade is calculated">
                   Points earned ÷ points possible across graded work.
-                  Assignments with no point value are excluded.
+                  Tasks with no point value are excluded.
                 </InfoHint>
               </span>
             </TableHead>
@@ -84,7 +84,7 @@ export function LeaderboardTable({
                   Status
                   <InfoHint label="What at-risk means">
                     Flagged at-risk when the overall grade is under 60%, or 2 or
-                    more assignments are overdue.
+                    more tasks are overdue.
                   </InfoHint>
                 </span>
               </TableHead>
@@ -95,8 +95,14 @@ export function LeaderboardTable({
           {rows.map((r) => (
             <TableRow
               key={r.userId}
-              className={cn(r.isViewer && "bg-muted/50")}
-              data-state={r.isViewer ? "selected" : undefined}
+              className={cn(
+                // The viewer's own row gets a blue wash across the whole row so
+                // they can find their standing at a glance — the UI is otherwise
+                // monochrome, so a hue reads instantly. The "You" badge stays as
+                // a non-color cue (identity never rides on color alone).
+                r.isViewer &&
+                  "bg-blue-50 hover:bg-blue-50 dark:bg-blue-500/15 dark:hover:bg-blue-500/15",
+              )}
             >
               <TableCell className="text-center font-medium tabular-nums">
                 {r.rank}

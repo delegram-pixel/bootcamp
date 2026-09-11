@@ -24,7 +24,7 @@ import { SubmissionComposer } from "@/components/intern/submission-composer";
 import { GradeSummary } from "@/components/submission/grade-summary";
 import { CommentThread } from "@/components/submission/comment-thread";
 
-export const metadata = { title: "Assignment" };
+export const metadata = { title: "Task" };
 
 export default async function AssignmentViewPage({
   params,
@@ -76,7 +76,7 @@ export default async function AssignmentViewPage({
           </Card>
         ) : (
           <p className="text-muted-foreground text-sm">
-            No instructions were added for this assignment.
+            No instructions were added for this task.
           </p>
         )}
 

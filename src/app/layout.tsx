@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s · Intern Portal",
   },
   description:
-    "Run internship cohorts: post assignments and notes, collect submissions, and give graded feedback.",
+    "Run internship cohorts: post tasks and notes, collect submissions, and give graded feedback.",
 };
 
 export default function RootLayout({

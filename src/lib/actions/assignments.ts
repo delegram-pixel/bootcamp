@@ -107,7 +107,7 @@ export async function createAssignment(
         return row.id;
       });
       revalidateAssignment(id, data.groupId);
-      return ok({ id }, "Assignment created");
+      return ok({ id }, "Task created");
     },
   );
 }
@@ -122,7 +122,7 @@ export async function updateAssignment(
         where: eq(assignments.id, data.id),
         columns: { groupId: true },
       });
-      if (!current) return fail("That assignment no longer exists.");
+      if (!current) return fail("That task no longer exists.");
 
       await db.transaction(async (tx) => {
         await tx
@@ -138,7 +138,7 @@ export async function updateAssignment(
         await syncRubric(tx, data.id, data.criteria);
       });
       revalidateAssignment(data.id, current.groupId);
-      return ok({ id: data.id }, "Assignment saved");
+      return ok({ id: data.id }, "Task saved");
     },
   );
 }
@@ -154,7 +154,7 @@ export async function publishAssignment(
       columns: { groupId: true, publishedAt: true, title: true, dueAt: true },
       with: { group: { columns: { name: true } } },
     });
-    if (!current) return fail("That assignment no longer exists.");
+    if (!current) return fail("That task no longer exists.");
     const firstPublish = current.publishedAt == null;
     await db
       .update(assignments)
@@ -174,7 +174,7 @@ export async function publishAssignment(
         },
         email: (r) => ({
           to: r.email!,
-          subject: `New assignment: ${current.title}`,
+          subject: `New task: ${current.title}`,
           react: AssignmentPublishedEmail({
             name: r.name,
             assignmentTitle: current.title,
@@ -187,7 +187,7 @@ export async function publishAssignment(
     }
 
     revalidateAssignment(data.id, current.groupId);
-    return ok(undefined, "Assignment published");
+    return ok(undefined, "Task published");
   });
 }
 
@@ -199,7 +199,7 @@ export async function unpublishAssignment(
       where: eq(assignments.id, data.id),
       columns: { groupId: true },
     });
-    if (!current) return fail("That assignment no longer exists.");
+    if (!current) return fail("That task no longer exists.");
     await db
       .update(assignments)
       .set({ status: "draft" })
@@ -217,11 +217,11 @@ export async function deleteAssignment(
       where: eq(assignments.id, data.id),
       columns: { groupId: true },
     });
-    if (!current) return fail("That assignment no longer exists.");
+    if (!current) return fail("That task no longer exists.");
     // Cascades remove rubric, criteria, attachments, submissions.
     await db.delete(assignments).where(eq(assignments.id, data.id));
     revalidateAssignment(data.id, current.groupId);
-    return ok({ groupId: current.groupId }, "Assignment deleted");
+    return ok({ groupId: current.groupId }, "Task deleted");
   });
 }
 

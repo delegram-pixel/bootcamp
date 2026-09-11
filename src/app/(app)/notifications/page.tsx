@@ -42,7 +42,7 @@ function describe(type: NotificationType, payload: Record<string, unknown> | nul
   const level = typeof p.level === "number" ? p.level : undefined;
   switch (type) {
     case "assignment_published":
-      return title ? `New assignment: ${title}` : "A new assignment was published";
+      return title ? `New task: ${title}` : "A new task was published";
     case "graded":
       return title ? `Your submission for ${title} was graded` : "A submission was graded";
     case "returned":
@@ -52,7 +52,7 @@ function describe(type: NotificationType, payload: Record<string, unknown> | nul
     case "announcement":
       return title ? `Announcement: ${title}` : "A new announcement was posted";
     case "due_soon":
-      return title ? `Due soon: ${title}` : "An assignment is due soon";
+      return title ? `Due soon: ${title}` : "A task is due soon";
     case "badge_earned":
       return label ? `Badge unlocked: ${label}` : "You earned a new badge";
     case "level_up":
@@ -116,7 +116,7 @@ export default async function NotificationsPage() {
         <EmptyState
           icon={BellIcon}
           title="You're all caught up"
-          description="Notifications about assignments, grades, and comments will show up here."
+          description="Notifications about tasks, grades, and comments will show up here."
         />
       ) : (
         <ul className="divide-y rounded-xl border">

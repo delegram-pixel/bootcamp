@@ -37,7 +37,7 @@ const LINKS = [
   {
     href: "/assignments",
     icon: ClipboardListIcon,
-    title: "Assignments",
+    title: "Tasks",
     blurb: "Everything you need to do, in one place.",
   },
   {

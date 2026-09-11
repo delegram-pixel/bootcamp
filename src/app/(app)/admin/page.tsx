@@ -39,7 +39,7 @@ export default async function AdminOverviewPage() {
   const stats = [
     { label: "Groups", value: groupCount, icon: LayersIcon, href: "/admin/groups" },
     { label: "Interns", value: internCount, icon: UsersIcon, href: "/admin/members" },
-    { label: "Published assignments", value: publishedCount, icon: FileTextIcon, href: "/admin/assignments" },
+    { label: "Published tasks", value: publishedCount, icon: FileTextIcon, href: "/admin/assignments" },
     { label: "Awaiting grading", value: awaitingCount, icon: ClipboardCheckIcon, href: "#needs-grading" },
   ];
 
@@ -125,7 +125,7 @@ export default async function AdminOverviewPage() {
 
         {remaining > 0 ? (
           <p className="text-muted-foreground text-sm">
-            + {remaining} more awaiting grading — open an assignment to see its full
+            + {remaining} more awaiting grading — open a task to see its full
             queue.
           </p>
         ) : null}

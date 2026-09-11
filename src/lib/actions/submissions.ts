@@ -72,7 +72,7 @@ async function withSubmissionAuth<TSchema extends z.ZodType, TResult>(
     columns: { id: true, groupId: true, dueAt: true, status: true },
   });
   if (!assignment || assignment.status !== "published") {
-    return fail("This assignment isn't open for submissions.");
+    return fail("This task isn't open for submissions.");
   }
 
   try {
@@ -339,7 +339,7 @@ export async function withdrawSubmission(
     });
     if (!sub) return fail("Nothing to withdraw.");
     if (sub.status !== "submitted" && sub.status !== "late") {
-      return fail("Only a submitted assignment can be moved back to draft.");
+      return fail("Only a submitted task can be moved back to draft.");
     }
     await db
       .update(submissions)

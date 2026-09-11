@@ -112,7 +112,7 @@ export function AssignmentForm(props: Props) {
                 <FormControl>
                   <Input type="number" min={0} placeholder="Optional" {...field} />
                 </FormControl>
-                <FormDescription>Total the assignment is worth.</FormDescription>
+                <FormDescription>Total the task is worth.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}

@@ -151,12 +151,12 @@ export default async function GroupDetailPage({
       <Separator className="my-8" />
 
       <div className="grid gap-8 lg:grid-cols-2">
-        {/* Assignments */}
+        {/* Tasks */}
         <section className="space-y-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="flex items-center gap-2 text-sm font-medium">
               <FileTextIcon className="size-4" />
-              Assignments
+              Tasks
               <span className="text-muted-foreground font-normal">
                 ({group.assignments.length})
               </span>
@@ -164,12 +164,12 @@ export default async function GroupDetailPage({
             <Button asChild size="sm" variant="outline">
               <Link href={`/admin/groups/${group.id}/assignments/new`}>
                 <PlusIcon className="size-4" />
-                New assignment
+                New task
               </Link>
             </Button>
           </div>
           {group.assignments.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No assignments yet.</p>
+            <p className="text-muted-foreground text-sm">No tasks yet.</p>
           ) : (
             <ul className="space-y-2">
               {group.assignments.map((a) => {

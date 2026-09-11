@@ -120,7 +120,7 @@ export function GradedEmail({
           {score}
           {total != null ? ` / ${total}` : ""}
         </strong>
-        . Open the assignment to read your mentor’s feedback and rubric notes.
+        . Open the task to read your mentor’s feedback and rubric notes.
       </Text>
     </Shell>
   );
@@ -165,13 +165,13 @@ export function AssignmentPublishedEmail({
 }) {
   return (
     <Shell
-      preview={`New assignment: ${assignmentTitle}`}
-      heading="New assignment posted"
-      cta={{ href: url(`/assignments/${assignmentId}`), label: "Open assignment" }}
+      preview={`New task: ${assignmentTitle}`}
+      heading="New task posted"
+      cta={{ href: url(`/assignments/${assignmentId}`), label: "Open task" }}
     >
       <Text style={para}>{hi(name)}</Text>
       <Text style={para}>
-        A new assignment is live in <strong>{groupName}</strong>:{" "}
+        A new task is live in <strong>{groupName}</strong>:{" "}
         <strong>{assignmentTitle}</strong>.
         {dueText ? ` ${dueText}.` : ""}
       </Text>
@@ -193,7 +193,7 @@ export function DueSoonEmail({
   return (
     <Shell
       preview={`Due soon: ${assignmentTitle}`}
-      heading="An assignment is due soon"
+      heading="A task is due soon"
       cta={{ href: url(`/assignments/${assignmentId}`), label: "Submit your work" }}
     >
       <Text style={para}>{hi(name)}</Text>

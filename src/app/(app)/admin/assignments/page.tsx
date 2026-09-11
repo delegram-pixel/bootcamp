@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { SectionHeading } from "@/components/section-heading";
 
-export const metadata = { title: "Assignments" };
+export const metadata = { title: "Tasks" };
 
 // Admin is enforced by the /admin layout; this page just reads and groups.
 export default async function AdminAssignmentsPage() {
@@ -25,15 +25,15 @@ export default async function AdminAssignmentsPage() {
   return (
     <>
       <PageHeader
-        title="Assignments"
-        description="Every assignment across your cohorts, and what's waiting to be graded."
+        title="Tasks"
+        description="Every task across your cohorts, and what's waiting to be graded."
       />
 
       {groups.length === 0 ? (
         <EmptyState
           icon={ClipboardListIcon}
           title="No cohorts yet"
-          description="Create a group first, then you can add assignments to it."
+          description="Create a group first, then you can add tasks to it."
         />
       ) : (
         <div className="space-y-10">
@@ -51,13 +51,13 @@ export default async function AdminAssignmentsPage() {
                 <Button asChild size="sm" variant="outline">
                   <Link href={`/admin/groups/${group.id}/assignments/new`}>
                     <PlusIcon className="size-4" />
-                    New assignment
+                    New task
                   </Link>
                 </Button>
               </div>
 
               {group.assignments.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No assignments yet.</p>
+                <p className="text-muted-foreground text-sm">No tasks yet.</p>
               ) : (
                 <ul className="space-y-2">
                   {group.assignments.map((a) => {

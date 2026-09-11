@@ -61,7 +61,7 @@ export function AssignmentActions({ assignment }: { assignment: Assignment }) {
     startTransition(async () => {
       const res = await deleteAssignment({ id: assignment.id });
       if (res.ok) {
-        toast.success(res.message ?? "Assignment deleted");
+        toast.success(res.message ?? "Task deleted");
         setConfirmOpen(false);
         router.push(`/admin/groups/${assignment.groupId}`);
       } else {
@@ -92,7 +92,7 @@ export function AssignmentActions({ assignment }: { assignment: Assignment }) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Assignment actions">
+          <Button variant="ghost" size="icon" aria-label="Task actions">
             <MoreVerticalIcon className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -116,7 +116,7 @@ export function AssignmentActions({ assignment }: { assignment: Assignment }) {
           <DialogHeader>
             <DialogTitle>Delete “{assignment.title}”?</DialogTitle>
             <DialogDescription>
-              This permanently removes the assignment, its rubric, attachments, and
+              This permanently removes the task, its rubric, attachments, and
               any submissions. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
@@ -125,7 +125,7 @@ export function AssignmentActions({ assignment }: { assignment: Assignment }) {
               Cancel
             </Button>
             <Button variant="destructive" onClick={onDelete} disabled={pending}>
-              {pending ? "Deleting…" : "Delete assignment"}
+              {pending ? "Deleting…" : "Delete task"}
             </Button>
           </DialogFooter>
         </DialogContent>

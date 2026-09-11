@@ -8,7 +8,7 @@ import { type AssignmentFormInput } from "@/lib/validations";
 import { PageHeader } from "@/components/page-header";
 import { AssignmentForm } from "@/components/admin/assignment-form";
 
-export const metadata = { title: "Edit assignment" };
+export const metadata = { title: "Edit task" };
 
 export default async function EditAssignmentPage({
   params,
@@ -41,7 +41,7 @@ export default async function EditAssignmentPage({
         <ChevronLeftIcon className="size-4" />
         {assignment.title}
       </Link>
-      <PageHeader title="Edit assignment" description="Changes are visible to interns as soon as you save (if published)." />
+      <PageHeader title="Edit task" description="Changes are visible to interns as soon as you save (if published)." />
       <div className="max-w-3xl">
         <AssignmentForm mode="edit" assignmentId={assignment.id} initial={initial} />
       </div>

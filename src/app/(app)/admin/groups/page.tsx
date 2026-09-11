@@ -24,7 +24,7 @@ export default async function AdminGroupsPage() {
         <EmptyState
           icon={LayersIcon}
           title="No groups yet"
-          description="Create your first cohort to start adding interns and assignments."
+          description="Create your first cohort to start adding interns and tasks."
         >
           <CreateGroupDialog />
         </EmptyState>

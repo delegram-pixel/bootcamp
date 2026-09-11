@@ -40,16 +40,16 @@ export default async function GroupHomePage({
       </PageHeader>
 
       <div className="space-y-10">
-        {/* Assignments */}
+        {/* Tasks */}
         <section className="space-y-3">
           <SectionHeading icon={FileTextIcon} count={group.assignments.length}>
-            Assignments
+            Tasks
           </SectionHeading>
           {group.assignments.length === 0 ? (
             <EmptyState
               icon={FileTextIcon}
-              title="No assignments yet"
-              description="When your mentor publishes an assignment, it shows up here."
+              title="No tasks yet"
+              description="When your mentor publishes a task, it shows up here."
             />
           ) : (
             <ul className="space-y-2">
