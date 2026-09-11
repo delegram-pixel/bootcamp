@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { InfoHint } from "@/components/scoring/info-hint";
 
 /**
  * Compact metric tile for the standing / progress views — the same shape as the
@@ -18,18 +19,28 @@ export function StatTile({
   label,
   value,
   hint,
+  info,
   icon: Icon,
 }: {
   label: string;
   value: ReactNode;
   hint?: string;
+  /** Optional one-line explanation, revealed by a "?" beside the label. */
+  info?: ReactNode;
   icon: LucideIcon;
 }) {
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardDescription>{label}</CardDescription>
+          <div className="flex items-center gap-1.5">
+            <CardDescription>{label}</CardDescription>
+            {info ? (
+              <InfoHint label={`How ${label.toLowerCase()} is calculated`}>
+                {info}
+              </InfoHint>
+            ) : null}
+          </div>
           <Icon className="text-muted-foreground size-4" />
         </div>
         <CardTitle className="text-3xl tabular-nums">{value}</CardTitle>

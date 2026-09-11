@@ -5,10 +5,12 @@ import {
   LayersIcon,
   ListTodoIcon,
   SparklesIcon,
+  TrophyIcon,
 } from "lucide-react";
 
 import { getInternDashboard } from "@/db/queries/dashboard";
 import { getMyGroups } from "@/db/queries/groups";
+import { getCohortLeaderboard, type CohortLeaderboard } from "@/db/queries/scoring";
 import { requireUser } from "@/lib/authz";
 import { internActionState, needsAction } from "@/lib/submission-status";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +20,7 @@ import { PageHeader } from "@/components/page-header";
 import { SectionHeading } from "@/components/section-heading";
 import { AssignmentRow } from "@/components/intern/assignment-row";
 import { DashboardIntro } from "@/components/intern/dashboard-intro";
+import { CohortStandingCard } from "@/components/scoring/cohort-standing-card";
 
 export const metadata = { title: "Dashboard" };
 
@@ -32,6 +35,14 @@ export default async function DashboardPage() {
   const attention = items.filter((i) => needsAction(internActionState(i.status)));
   const awaiting = items.filter((i) => internActionState(i.status) === "awaiting");
   const graded = items.filter((i) => internActionState(i.status) === "graded");
+
+  // One compact standing per cohort. Skip boards with fewer than two interns —
+  // a leaderboard of one has nothing to compare against.
+  const boards = (
+    await Promise.all(groups.map((g) => getCohortLeaderboard(user.id, g.id)))
+  ).filter(
+    (b): b is CohortLeaderboard => b != null && b.entries.length >= 2,
+  );
 
   return (
     <>
@@ -95,6 +106,23 @@ export default async function DashboardPage() {
                   <AssignmentRow key={item.id} item={item} showScore />
                 ))}
               </ul>
+            </section>
+          ) : null}
+
+          {/* Where you stand — per-cohort leaderboard, top few + your own rank */}
+          {boards.length > 0 ? (
+            <section className="space-y-4">
+              <SectionHeading icon={TrophyIcon}>Where you stand</SectionHeading>
+              <div className="space-y-6">
+                {boards.map((b) => (
+                  <CohortStandingCard
+                    key={b.group.id}
+                    groupId={b.group.id}
+                    groupName={b.group.name}
+                    entries={b.entries}
+                  />
+                ))}
+              </div>
             </section>
           ) : null}
 

@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { InfoHint } from "@/components/scoring/info-hint";
 
 /** The subset of a leaderboard/standing entry this table renders. */
 export type LeaderboardRow = {
@@ -58,9 +59,36 @@ export function LeaderboardTable({
             <TableHead className="w-12 text-center">#</TableHead>
             <TableHead>Intern</TableHead>
             <TableHead className="text-right">Level</TableHead>
-            <TableHead className="text-right">Grade</TableHead>
-            <TableHead className="text-right">XP</TableHead>
-            {showRisk ? <TableHead className="text-right">Status</TableHead> : null}
+            <TableHead className="text-right">
+              <span className="inline-flex items-center justify-end gap-1">
+                Grade
+                <InfoHint label="How grade is calculated">
+                  Points earned ÷ points possible across graded work.
+                  Assignments with no point value are excluded.
+                </InfoHint>
+              </span>
+            </TableHead>
+            <TableHead className="text-right">
+              <span className="inline-flex items-center justify-end gap-1">
+                XP
+                <InfoHint label="How XP and ranking work">
+                  Ranked by XP — the points scored, plus bonuses for on-time
+                  (+10) and perfect (+25) work. It rewards volume, so more graded
+                  work can outrank a higher grade&nbsp;%.
+                </InfoHint>
+              </span>
+            </TableHead>
+            {showRisk ? (
+              <TableHead className="text-right">
+                <span className="inline-flex items-center justify-end gap-1">
+                  Status
+                  <InfoHint label="What at-risk means">
+                    Flagged at-risk when the overall grade is under 60%, or 2 or
+                    more assignments are overdue.
+                  </InfoHint>
+                </span>
+              </TableHead>
+            ) : null}
           </TableRow>
         </TableHeader>
         <TableBody>

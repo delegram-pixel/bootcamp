@@ -16,6 +16,7 @@ import { SectionHeading } from "@/components/section-heading";
 import { StatTile } from "@/components/scoring/stat-tile";
 import { XpBar } from "@/components/scoring/xp-bar";
 import { BadgeGrid } from "@/components/scoring/badge-grid";
+import { InfoHint } from "@/components/scoring/info-hint";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata = { title: "Progress" };
@@ -60,6 +61,7 @@ export default async function ProgressPage() {
             label="Overall grade"
             value={gradeValue}
             hint={gradeHint}
+            info="Points earned ÷ points possible across your graded work. Assignments with no point value aren't counted toward it."
             icon={TrophyIcon}
           />
           <StatTile
@@ -126,7 +128,16 @@ export default async function ProgressPage() {
         </section>
 
         <section className="space-y-3">
-          <SectionHeading icon={ZapIcon}>Level &amp; XP</SectionHeading>
+          <SectionHeading icon={ZapIcon}>
+            Level &amp; XP
+            <InfoHint label="How XP and levels work">
+              XP comes from graded work — the points you score, plus 10 for
+              submitting on time and 25 for a perfect score. Your level comes
+              from total XP: 100 for level 2, 250 for level 3, 500 for level 4,
+              and up. The leaderboard ranks by XP, so steady volume can outrank a
+              higher grade&nbsp;%.
+            </InfoHint>
+          </SectionHeading>
           <Card>
             <CardContent className="space-y-4">
               <XpBar level={level} />
