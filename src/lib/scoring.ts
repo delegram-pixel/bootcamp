@@ -162,6 +162,55 @@ export function totalXp(rows: ScorecardRow[]): number {
   return rows.reduce((sum, r) => sum + xpForRow(r), 0);
 }
 
+/* ------------------------------------------------------------ quiz rows */
+
+/** The minimum a quiz needs to contribute a scorecard row. */
+export type QuizScore = {
+  assessmentId: string;
+  /** Sum of the quiz's question points — its share of `possible`. */
+  total: number;
+};
+
+/** The best sitting for one (intern, quiz) pair, as the row math needs it. */
+export type QuizAttemptScore = {
+  score: number;
+  total: number;
+  submittedAt: Date;
+};
+
+/**
+ * One scorecard row per quiz, so module assessments land in the *same*
+ * cumulative pool as assignments.
+ *
+ * A quiz with **any** attempt counts as graded work: the locked design says the
+ * best score counts toward the grade, so a 20/30 sitting puts 20 in `earned`
+ * and 30 in `possible` whether or not it cleared the pass mark. Keeping the
+ * module shut is the gating layer's job (`lib/modules.ts`), which is why a
+ * failed-but-scored quiz doesn't have to masquerade as un-graded here.
+ *
+ * `dueAt` is always null — quizzes have no deadline, so they never register as
+ * overdue, and `submittedOnTime` treats them as on time.
+ *
+ * Pure and exported so the scorecard's own numbers can be reproduced exactly by
+ * a verification script, rather than by a re-implementation of this rule.
+ */
+export function quizRowsFor(
+  internId: string,
+  quizzes: QuizScore[],
+  attempts: Map<string, QuizAttemptScore>,
+): ScorecardRow[] {
+  return quizzes.map((q): ScorecardRow => {
+    const a = attempts.get(`${internId}:${q.assessmentId}`);
+    return {
+      status: a ? "graded" : null,
+      score: a?.score ?? null,
+      total: q.total,
+      dueAt: null,
+      submittedAt: a?.submittedAt ?? null,
+    };
+  });
+}
+
 export type LevelInfo = {
   level: number;
   xp: number;

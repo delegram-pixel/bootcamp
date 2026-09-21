@@ -1,12 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
 import { noteAttachments, notes } from "@/db/schema";
 import { guardedAction, ok, fail, type ActionResult } from "@/lib/actions/types";
+import { revalidateNoteEditor, revalidateNoteViews } from "@/lib/revalidate-notes";
 import {
   noteCreateSchema,
   noteUpdateSchema,
@@ -22,14 +22,19 @@ import {
 
 const ADMIN = { action: "manage", resource: { kind: "admin" } } as const;
 
-function revalidateNotes(groupId?: string | null) {
-  revalidatePath("/admin/notes");
-  revalidatePath("/notes");
-  revalidatePath("/dashboard");
-  if (groupId) {
-    revalidatePath(`/admin/groups/${groupId}`);
-    revalidatePath(`/groups/${groupId}`);
-  }
+/**
+ * Where a new note lands in its cohort's module path when the admin leaves the
+ * position blank: one past the end of that path. Global notes are numbered
+ * among themselves, so every cohort's path still starts at 1.
+ */
+async function nextPosition(groupId: string | null): Promise<number> {
+  const rows = await db.query.notes.findMany({
+    where: groupId ? eq(notes.groupId, groupId) : isNull(notes.groupId),
+    columns: { position: true },
+    orderBy: [desc(notes.position)],
+    limit: 1,
+  });
+  return (rows[0]?.position ?? 0) + 1;
 }
 
 export async function createNote(
@@ -46,11 +51,12 @@ export async function createNote(
           title: data.title,
           bodyMd: data.bodyMd,
           weekNumber: data.weekNumber ? Number(data.weekNumber) : null,
+          position: data.position ? Number(data.position) : await nextPosition(groupId),
           topic: data.topic || null,
           createdById: userId,
         })
         .returning({ id: notes.id });
-      revalidateNotes(groupId);
+      revalidateNoteViews(groupId);
       return ok({ id: row.id }, "Note posted");
     },
   );
@@ -68,10 +74,13 @@ export async function updateNote(input: NoteUpdateInput): Promise<ActionResult> 
           title: data.title,
           bodyMd: data.bodyMd,
           weekNumber: data.weekNumber ? Number(data.weekNumber) : null,
+          // Blank on edit keeps the note where it is, so an admin editing copy
+          // can't silently reshuffle the path.
+          ...(data.position ? { position: Number(data.position) } : {}),
           topic: data.topic || null,
         })
         .where(eq(notes.id, data.id));
-      revalidateNotes(groupId);
+      revalidateNoteViews(groupId);
       return ok(undefined, "Note updated");
     },
   );
@@ -89,18 +98,12 @@ export async function deleteNote(
     });
     if (!current) return fail("That note no longer exists.");
     await db.delete(notes).where(eq(notes.id, data.id));
-    revalidateNotes(current.groupId);
+    revalidateNoteViews(current.groupId);
     return ok(undefined, "Note deleted");
   });
 }
 
 /* ---------------------------------------------------------- attachments */
-
-/** Revalidate the note's edit page (where the manager lives) plus the reader views. */
-function revalidateNoteAttachments(noteId: string, groupId: string | null) {
-  revalidatePath(`/notes/${noteId}/edit`);
-  revalidateNotes(groupId);
-}
 
 export async function addNoteAttachmentLink(
   input: NoteAttachmentLinkInput,
@@ -119,7 +122,7 @@ export async function addNoteAttachmentLink(
         label: data.label,
         url: data.url,
       });
-      revalidateNoteAttachments(data.noteId, note.groupId);
+      revalidateNoteEditor(data.noteId, note.groupId);
       return ok(undefined, "Link added");
     },
   );
@@ -145,7 +148,7 @@ export async function addNoteAttachmentFile(
         mime: data.mime ?? null,
         size: data.size ?? null,
       });
-      revalidateNoteAttachments(data.noteId, note.groupId);
+      revalidateNoteEditor(data.noteId, note.groupId);
       return ok(undefined, "File added");
     },
   );
@@ -169,7 +172,7 @@ export async function removeNoteAttachment(
             eq(noteAttachments.noteId, data.noteId),
           ),
         );
-      revalidateNoteAttachments(data.noteId, note?.groupId ?? null);
+      revalidateNoteEditor(data.noteId, note?.groupId ?? null);
       return ok(undefined, "Attachment removed");
     },
   );

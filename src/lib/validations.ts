@@ -236,6 +236,15 @@ export const noteFormSchema = z.object({
     .regex(/^[1-9][0-9]?$/, "Use a week number, e.g. 2")
     .optional()
     .or(z.literal("")),
+  // Order within the cohort's module path — the gating order. A string in the
+  // form; the action stores an integer. Blank means "append": on create the note
+  // lands at the end of its cohort's path, on edit it keeps its current spot.
+  position: z
+    .string()
+    .trim()
+    .regex(/^[1-9][0-9]{0,3}$/, "Use a whole number, e.g. 3")
+    .optional()
+    .or(z.literal("")),
   topic: z.string().trim().max(80).optional().or(z.literal("")),
 });
 export type NoteFormInput = z.infer<typeof noteFormSchema>;
@@ -270,6 +279,111 @@ export const removeNoteAttachmentSchema = z.object({
   noteId: z.string().min(1),
 });
 export type RemoveNoteAttachmentInput = z.infer<typeof removeNoteAttachmentSchema>;
+
+/* --------------------------------------------------------- assessments */
+
+/**
+ * Quiz authoring. Every field is a string because it arrives from a form input;
+ * the actions convert to integers. Deliberately no `.default()` and no
+ * `z.coerce`, so `z.infer === z.input` and the client forms can validate against
+ * these same schemas — the convention established by the grading schemas.
+ */
+
+/** Pass mark for a module's quiz: 1–100, as a whole-number percentage. */
+export const assessmentUpsertSchema = z.object({
+  noteId: z.string().min(1),
+  passPct: z
+    .string()
+    .trim()
+    .regex(/^([1-9][0-9]?|100)$/, "Use a percentage from 1 to 100"),
+});
+export type AssessmentUpsertInput = z.infer<typeof assessmentUpsertSchema>;
+
+export const assessmentQuestionAddSchema = z.object({
+  assessmentId: z.string().min(1),
+  prompt: z.string().trim().min(3, "Write the question").max(500),
+  points: z
+    .string()
+    .trim()
+    .regex(/^([1-9][0-9]?)$/, "Points must be 1–99"),
+});
+export type AssessmentQuestionAddInput = z.infer<
+  typeof assessmentQuestionAddSchema
+>;
+
+/** Editing an existing question — same fields, addressed by its own id. */
+export const assessmentQuestionUpdateSchema = assessmentQuestionAddSchema
+  .omit({ assessmentId: true })
+  .extend({ id: z.string().min(1) });
+export type AssessmentQuestionUpdateInput = z.infer<
+  typeof assessmentQuestionUpdateSchema
+>;
+
+export const assessmentOptionAddSchema = z.object({
+  questionId: z.string().min(1),
+  label: z.string().trim().min(1, "Required").max(300),
+  isCorrect: z.boolean(),
+});
+export type AssessmentOptionAddInput = z.infer<typeof assessmentOptionAddSchema>;
+
+export const assessmentOptionUpdateSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().trim().min(1, "Required").max(300),
+});
+export type AssessmentOptionUpdateInput = z.infer<
+  typeof assessmentOptionUpdateSchema
+>;
+
+/**
+ * Mark which option is the right answer. Carries the question too, so the write
+ * can clear every other option on that question in the same transaction — one
+ * correct answer per question is what makes the radio UI and the scoring agree.
+ */
+export const assessmentCorrectOptionSchema = z.object({
+  questionId: z.string().min(1),
+  optionId: z.string().min(1),
+});
+export type AssessmentCorrectOptionInput = z.infer<
+  typeof assessmentCorrectOptionSchema
+>;
+
+export const removeAssessmentSchema = z.object({ noteId: z.string().min(1) });
+export type RemoveAssessmentInput = z.infer<typeof removeAssessmentSchema>;
+
+export const removeAssessmentQuestionSchema = z.object({
+  id: z.string().min(1),
+  assessmentId: z.string().min(1),
+});
+export type RemoveAssessmentQuestionInput = z.infer<
+  typeof removeAssessmentQuestionSchema
+>;
+
+export const removeAssessmentOptionSchema = z.object({
+  id: z.string().min(1),
+  questionId: z.string().min(1),
+});
+export type RemoveAssessmentOptionInput = z.infer<
+  typeof removeAssessmentOptionSchema
+>;
+
+/**
+ * Sitting a quiz. The client sends only *which option it picked per question* —
+ * never a score. The action re-reads the answer key and derives the score
+ * server-side, so a tampered payload can change what is submitted but not what
+ * it is worth.
+ */
+export const attemptAnswerSchema = z.object({
+  questionId: z.string().min(1),
+  /** null = deliberately left blank; it scores zero and is recorded as such. */
+  optionId: z.string().min(1).nullable(),
+});
+export type AttemptAnswerInput = z.infer<typeof attemptAnswerSchema>;
+
+export const submitAttemptSchema = z.object({
+  assessmentId: z.string().min(1),
+  answers: z.array(attemptAnswerSchema).max(200),
+});
+export type SubmitAttemptInput = z.infer<typeof submitAttemptSchema>;
 
 /* ---------------------------------------------------------- announcements */
 

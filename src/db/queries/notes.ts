@@ -3,11 +3,35 @@ import "server-only";
 import { asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
 
 import { db } from "@/db";
-import { memberships, noteAttachments, notes } from "@/db/schema";
+import {
+  assessmentOptions,
+  assessmentQuestions,
+  memberships,
+  noteAttachments,
+  notes,
+} from "@/db/schema";
 
 /** Attachments ordered oldest-first, so display order is stable across reloads. */
 const withAttachments = {
   attachments: { orderBy: [asc(noteAttachments.createdAt)] },
+};
+
+/**
+ * The quiz as the **authoring** UI needs it: questions and options in their
+ * display order, and `isCorrect` included. Only admins reach this — the
+ * intern-facing loader in `queries/modules.ts` deliberately omits the answer key.
+ */
+const withAssessment = {
+  assessment: {
+    with: {
+      questions: {
+        orderBy: [asc(assessmentQuestions.order)],
+        with: {
+          options: { orderBy: [asc(assessmentOptions.order)] },
+        },
+      },
+    },
+  },
 };
 
 /** Notes visible to an intern: global notes + notes in their groups. */
@@ -45,6 +69,6 @@ export async function getNotesForGroup(groupId: string) {
 export async function getNote(id: string) {
   return db.query.notes.findFirst({
     where: eq(notes.id, id),
-    with: withAttachments,
+    with: { ...withAttachments, ...withAssessment },
   });
 }

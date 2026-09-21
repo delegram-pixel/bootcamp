@@ -45,6 +45,7 @@ type ExistingNote = {
   bodyMd: string;
   groupId: string | null;
   weekNumber: number | null;
+  position: number;
   topic: string | null;
 };
 
@@ -53,6 +54,7 @@ const EMPTY: NoteFormInput = {
   bodyMd: "",
   groupId: "",
   weekNumber: "",
+  position: "",
   topic: "",
 };
 
@@ -62,6 +64,7 @@ function toDefaults(note: ExistingNote): NoteFormInput {
     bodyMd: note.bodyMd,
     groupId: note.groupId ?? "",
     weekNumber: note.weekNumber != null ? String(note.weekNumber) : "",
+    position: String(note.position),
     topic: note.topic ?? "",
   };
 }
@@ -156,7 +159,7 @@ export function NoteForm({
             </FormItem>
           )}
         />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           <FormField
             control={form.control}
             name="weekNumber"
@@ -173,6 +176,28 @@ export function NoteForm({
                   />
                 </FormControl>
                 <FormDescription>Groups notes by week for readers.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="position"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Path order</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={9999}
+                    placeholder={isEdit ? "Keeps current" : "Appends"}
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Place in the cohort&rsquo;s module path.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

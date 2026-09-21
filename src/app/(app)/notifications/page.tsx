@@ -3,8 +3,10 @@ import {
   AwardIcon,
   BellIcon,
   ChevronRightIcon,
+  ClipboardCheckIcon,
   FileTextIcon,
   GraduationCapIcon,
+  LockOpenIcon,
   MessageSquareIcon,
   MegaphoneIcon,
   ClockIcon,
@@ -32,6 +34,8 @@ const ICONS: Record<NotificationType, React.ComponentType<{ className?: string }
   due_soon: ClockIcon,
   badge_earned: AwardIcon,
   level_up: TrendingUpIcon,
+  assessment_passed: ClipboardCheckIcon,
+  module_unlocked: LockOpenIcon,
 };
 
 /** Turn a notification's type + payload into a one-line message. */
@@ -57,6 +61,10 @@ function describe(type: NotificationType, payload: Record<string, unknown> | nul
       return label ? `Badge unlocked: ${label}` : "You earned a new badge";
     case "level_up":
       return level != null ? `You reached level ${level}` : "You leveled up";
+    case "assessment_passed":
+      return title ? `Assessment passed: ${title}` : "You passed an assessment";
+    case "module_unlocked":
+      return title ? `Module unlocked: ${title}` : "A new module is unlocked";
   }
 }
 
@@ -76,6 +84,7 @@ function notificationHref(
   const assignmentId = typeof p.assignmentId === "string" ? p.assignmentId : null;
   const submissionId = typeof p.submissionId === "string" ? p.submissionId : null;
   const announcementId = typeof p.announcementId === "string" ? p.announcementId : null;
+  const noteId = typeof p.noteId === "string" ? p.noteId : null;
 
   switch (type) {
     case "assignment_published":
@@ -97,6 +106,10 @@ function notificationHref(
     case "level_up":
       // Badges and levels live on the intern's progress page.
       return "/progress";
+    case "assessment_passed":
+    case "module_unlocked":
+      // Both point at the module itself, which shows the result or the next quiz.
+      return noteId ? `/notes/${noteId}` : "/notes";
   }
 }
 

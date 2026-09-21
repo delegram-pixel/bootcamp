@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { getInternDashboard } from "@/db/queries/dashboard";
+import { getModulePathsForIntern } from "@/db/queries/modules";
 import { getMyGroups } from "@/db/queries/groups";
 import { getCohortLeaderboard, type CohortLeaderboard } from "@/db/queries/scoring";
 import { requireUser } from "@/lib/authz";
@@ -20,15 +21,17 @@ import { PageHeader } from "@/components/page-header";
 import { SectionHeading } from "@/components/section-heading";
 import { AssignmentRow } from "@/components/intern/assignment-row";
 import { DashboardIntro } from "@/components/intern/dashboard-intro";
+import { ModuleAttention } from "@/components/intern/module-attention";
 import { CohortStandingCard } from "@/components/scoring/cohort-standing-card";
 
 export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const [items, groups] = await Promise.all([
+  const [items, groups, modulePaths] = await Promise.all([
     getInternDashboard(user.id),
     getMyGroups(user.id),
+    getModulePathsForIntern(user.id),
   ]);
 
   const firstName = user.name?.split(" ")[0];
@@ -80,6 +83,11 @@ export default async function DashboardPage() {
               </ul>
             )}
           </section>
+
+          {/* Modules the intern can act on — a failed quiz reads as "graded" to
+              progress(), so without this it would vanish from every bucket while
+              still holding the rest of the path shut. */}
+          <ModuleAttention paths={modulePaths} />
 
           {/* Awaiting feedback */}
           {awaiting.length > 0 ? (

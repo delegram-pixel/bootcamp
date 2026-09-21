@@ -11,6 +11,7 @@
  */
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   integer,
   jsonb,
   pgEnum,
@@ -294,6 +295,13 @@ export const notes = pgTable("note", {
   bodyMd: text("body_md").notNull(),
   week: text("week"),
   weekNumber: integer("week_number"),
+  /**
+   * Position within the cohort's module path — the gating order. A note pinned
+   * to a group is a module in that cohort's path; ordering is `(position,
+   * createdAt)` so gaps and ties are both harmless. Global notes (`groupId`
+   * null) sit outside every path and are never gated.
+   */
+  position: integer("position").notNull().default(0),
   topic: text("topic"),
   createdById: text("created_by_id")
     .notNull()
@@ -316,6 +324,89 @@ export const noteAttachments = pgTable("note_attachment", {
   createdAt: createdAt(),
 });
 
+/* -------------------------------------------------------- assessments */
+
+/**
+ * A note's end-of-module quiz. 1:1 with a cohort note via the unique `noteId`,
+ * so "does this module gate?" is a plain existence check — a note with no
+ * assessment row is ungated reading. Only cohort notes can carry one (a global
+ * note has no path to gate), enforced in the actions, not here.
+ *
+ * `passPct` is the threshold the *best* attempt is measured against.
+ */
+export const assessments = pgTable("assessment", {
+  id: uuid().primaryKey(),
+  noteId: text("note_id")
+    .notNull()
+    .unique()
+    .references(() => notes.id, { onDelete: "cascade" }),
+  passPct: integer("pass_pct").notNull().default(70),
+  createdAt: createdAt(),
+});
+
+export const assessmentQuestions = pgTable("assessment_question", {
+  id: uuid().primaryKey(),
+  assessmentId: text("assessment_id")
+    .notNull()
+    .references(() => assessments.id, { onDelete: "cascade" }),
+  prompt: text("prompt").notNull(),
+  points: integer("points").notNull().default(1),
+  order: integer("sort_order").notNull().default(0),
+  createdAt: createdAt(),
+});
+
+/**
+ * One answer choice. `isCorrect` is the scoring truth — it never leaves the
+ * server before an attempt is graded (the intern-facing loader strips it).
+ */
+export const assessmentOptions = pgTable("assessment_option", {
+  id: uuid().primaryKey(),
+  questionId: text("question_id")
+    .notNull()
+    .references(() => assessmentQuestions.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  isCorrect: boolean("is_correct").notNull().default(false),
+  order: integer("sort_order").notNull().default(0),
+});
+
+/**
+ * One sitting. Retakes are unlimited, so there is no unique key — "the score
+ * that counts" is the max-scoring attempt, resolved in the query layer.
+ *
+ * `total` is snapshotted at submit time, so an admin editing question points
+ * later can't retroactively change an old attempt's denominator.
+ */
+export const assessmentAttempts = pgTable("assessment_attempt", {
+  id: uuid().primaryKey(),
+  assessmentId: text("assessment_id")
+    .notNull()
+    .references(() => assessments.id, { onDelete: "cascade" }),
+  internId: text("intern_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  score: integer("score").notNull(),
+  total: integer("total").notNull(),
+  passed: boolean("passed").notNull(),
+  submittedAt: timestamp("submitted_at", { mode: "date" }).notNull().defaultNow(),
+  createdAt: createdAt(),
+});
+
+/** What the intern picked, so a graded attempt can be reviewed question by question. */
+export const assessmentAnswers = pgTable("assessment_answer", {
+  id: uuid().primaryKey(),
+  attemptId: text("attempt_id")
+    .notNull()
+    .references(() => assessmentAttempts.id, { onDelete: "cascade" }),
+  questionId: text("question_id")
+    .notNull()
+    .references(() => assessmentQuestions.id, { onDelete: "cascade" }),
+  /** Null when the question was left unanswered. */
+  optionId: text("option_id").references(() => assessmentOptions.id, {
+    onDelete: "cascade",
+  }),
+  createdAt: createdAt(),
+});
+
 export const announcements = pgTable("announcement", {
   id: uuid().primaryKey(),
   groupId: text("group_id").references(() => groups.id, { onDelete: "cascade" }),
@@ -334,7 +425,9 @@ export type NotificationType =
   | "announcement"
   | "due_soon"
   | "badge_earned"
-  | "level_up";
+  | "level_up"
+  | "assessment_passed"
+  | "module_unlocked";
 
 export const notifications = pgTable("notification", {
   id: uuid().primaryKey(),
@@ -377,6 +470,7 @@ export const earnedBadges = pgTable(
 export const usersRelations = relations(users, ({ many }) => ({
   memberships: many(memberships),
   submissions: many(submissions),
+  assessmentAttempts: many(assessmentAttempts),
 }));
 
 export const groupsRelations = relations(groups, ({ many }) => ({
@@ -468,10 +562,65 @@ export const notesRelations = relations(notes, ({ one, many }) => ({
   group: one(groups, { fields: [notes.groupId], references: [groups.id] }),
   createdBy: one(users, { fields: [notes.createdById], references: [users.id] }),
   attachments: many(noteAttachments),
+  assessment: one(assessments),
 }));
 
 export const noteAttachmentsRelations = relations(noteAttachments, ({ one }) => ({
   note: one(notes, { fields: [noteAttachments.noteId], references: [notes.id] }),
+}));
+
+export const assessmentsRelations = relations(assessments, ({ one, many }) => ({
+  note: one(notes, { fields: [assessments.noteId], references: [notes.id] }),
+  questions: many(assessmentQuestions),
+  attempts: many(assessmentAttempts),
+}));
+
+export const assessmentQuestionsRelations = relations(
+  assessmentQuestions,
+  ({ one, many }) => ({
+    assessment: one(assessments, {
+      fields: [assessmentQuestions.assessmentId],
+      references: [assessments.id],
+    }),
+    options: many(assessmentOptions),
+  }),
+);
+
+export const assessmentOptionsRelations = relations(assessmentOptions, ({ one }) => ({
+  question: one(assessmentQuestions, {
+    fields: [assessmentOptions.questionId],
+    references: [assessmentQuestions.id],
+  }),
+}));
+
+export const assessmentAttemptsRelations = relations(
+  assessmentAttempts,
+  ({ one, many }) => ({
+    assessment: one(assessments, {
+      fields: [assessmentAttempts.assessmentId],
+      references: [assessments.id],
+    }),
+    intern: one(users, {
+      fields: [assessmentAttempts.internId],
+      references: [users.id],
+    }),
+    answers: many(assessmentAnswers),
+  }),
+);
+
+export const assessmentAnswersRelations = relations(assessmentAnswers, ({ one }) => ({
+  attempt: one(assessmentAttempts, {
+    fields: [assessmentAnswers.attemptId],
+    references: [assessmentAttempts.id],
+  }),
+  question: one(assessmentQuestions, {
+    fields: [assessmentAnswers.questionId],
+    references: [assessmentQuestions.id],
+  }),
+  option: one(assessmentOptions, {
+    fields: [assessmentAnswers.optionId],
+    references: [assessmentOptions.id],
+  }),
 }));
 
 export const announcementsRelations = relations(announcements, ({ one }) => ({
@@ -495,6 +644,11 @@ export type CriterionScore = typeof criterionScores.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
 export type Note = typeof notes.$inferSelect;
 export type NoteAttachment = typeof noteAttachments.$inferSelect;
+export type Assessment = typeof assessments.$inferSelect;
+export type AssessmentQuestion = typeof assessmentQuestions.$inferSelect;
+export type AssessmentOption = typeof assessmentOptions.$inferSelect;
+export type AssessmentAttempt = typeof assessmentAttempts.$inferSelect;
+export type AssessmentAnswer = typeof assessmentAnswers.$inferSelect;
 export type Announcement = typeof announcements.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type EarnedBadge = typeof earnedBadges.$inferSelect;

@@ -3,7 +3,16 @@ import "server-only";
 import { and, asc, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
-import { assignments, groups, memberships, submissions } from "@/db/schema";
+import {
+  assessmentAttempts,
+  assessmentQuestions,
+  assessments,
+  assignments,
+  groups,
+  memberships,
+  notes,
+  submissions,
+} from "@/db/schema";
 import {
   assignmentTotal,
   countOverdue,
@@ -12,6 +21,7 @@ import {
   levelInfo,
   overallGrade,
   progress,
+  quizRowsFor,
   totalXp,
   weeklyStreak,
   type BadgeKey,
@@ -20,6 +30,7 @@ import {
   type Progress,
   type ScorecardRow,
 } from "@/lib/scoring";
+import { isBetterAttempt, type AttemptLike } from "@/lib/modules";
 import { type SubmissionStatus } from "@/lib/submission-status";
 
 export type InternScorecard = {
@@ -65,6 +76,93 @@ function buildScorecard(rows: ScorecardRow[], extras: ScorecardExtras): InternSc
 
 const EMPTY_EXTRAS: ScorecardExtras = { submittedDates: [], itemKindCount: 0 };
 
+/* ------------------------------------------------------------- quizzes */
+
+/**
+ * A cohort quiz reduced to what a standing needs. `total` is the sum of its
+ * question points — the percentage denominator, and the contribution to the
+ * cumulative grade pool's `possible`.
+ */
+type QuizLite = {
+  assessmentId: string;
+  noteId: string;
+  groupId: string;
+  total: number;
+};
+
+/** The best sitting for one (intern, quiz) pair. */
+type QuizAttemptLite = AttemptLike;
+
+/**
+ * Every usable quiz on a note in the given cohorts. A quiz with no questions is
+ * dropped — it has nothing to score, and counting it would put an unwinnable
+ * zero in the intern's grade denominator. Mirrors `usableQuiz` in
+ * `queries/modules.ts` so the grade and the gate agree on what counts as a quiz.
+ */
+async function loadQuizzes(groupIds: string[]): Promise<QuizLite[]> {
+  if (groupIds.length === 0) return [];
+  const rows = await db
+    .select({
+      assessmentId: assessments.id,
+      noteId: assessments.noteId,
+      groupId: notes.groupId,
+      points: assessmentQuestions.points,
+    })
+    .from(assessments)
+    .innerJoin(notes, eq(notes.id, assessments.noteId))
+    .innerJoin(
+      assessmentQuestions,
+      eq(assessmentQuestions.assessmentId, assessments.id),
+    )
+    .where(inArray(notes.groupId, groupIds));
+
+  const byId = new Map<string, QuizLite>();
+  for (const r of rows) {
+    if (r.groupId == null) continue; // global notes never carry a gating quiz
+    const cur = byId.get(r.assessmentId);
+    if (cur) cur.total += r.points;
+    else
+      byId.set(r.assessmentId, {
+        assessmentId: r.assessmentId,
+        noteId: r.noteId,
+        groupId: r.groupId,
+        total: r.points,
+      });
+  }
+  return [...byId.values()];
+}
+
+/**
+ * The best sitting per (intern, quiz), indexed `internId:assessmentId`. One
+ * query for the whole board — no per-intern N+1, same shape as `loadSubmissions`.
+ */
+async function loadBestAttempts(
+  assessmentIds: string[],
+  internIds: string[],
+): Promise<Map<string, QuizAttemptLite>> {
+  if (assessmentIds.length === 0 || internIds.length === 0) return new Map();
+  const rows = await db.query.assessmentAttempts.findMany({
+    where: and(
+      inArray(assessmentAttempts.assessmentId, assessmentIds),
+      inArray(assessmentAttempts.internId, internIds),
+    ),
+    columns: {
+      assessmentId: true,
+      internId: true,
+      score: true,
+      total: true,
+      submittedAt: true,
+    },
+  });
+  const best = new Map<string, QuizAttemptLite>();
+  for (const r of rows) {
+    const key = `${r.internId}:${r.assessmentId}`;
+    const cur = best.get(key);
+    if (!cur || isBetterAttempt(r, cur)) best.set(key, r);
+  }
+  return best;
+}
+
 /**
  * One intern's standing across every published assignment in their groups: the
  * cumulative grade, progress buckets, and XP/level. Gathers the raw rows here
@@ -87,30 +185,34 @@ export async function getInternScorecard(userId: string): Promise<InternScorecar
     columns: { id: true, dueAt: true, points: true },
     with: { rubric: { with: { criteria: { columns: { maxPoints: true } } } } },
   });
-  if (asgs.length === 0) return buildScorecard([], EMPTY_EXTRAS);
 
-  const subs = await db.query.submissions.findMany({
-    where: and(
-      eq(submissions.internId, userId),
-      inArray(
-        submissions.assignmentId,
-        asgs.map((a) => a.id),
-      ),
-    ),
-    columns: { assignmentId: true, status: true, submittedAt: true },
-    with: {
-      grade: { columns: { score: true } },
-      items: { columns: { kind: true } },
-    },
-  });
+  // Assignments and quizzes are independent sources of graded work, so neither
+  // may short-circuit the other — an intern with quizzes but no published
+  // assignments still has a standing.
+  const quizzes = await loadQuizzes(groupIds);
+
+  const subs = asgs.length
+    ? await db.query.submissions.findMany({
+        where: and(
+          eq(submissions.internId, userId),
+          inArray(
+            submissions.assignmentId,
+            asgs.map((a) => a.id),
+          ),
+        ),
+        columns: { assignmentId: true, status: true, submittedAt: true },
+        with: {
+          grade: { columns: { score: true } },
+          items: { columns: { kind: true } },
+        },
+      })
+    : [];
+
+  const attempts = await loadBestAttempts(
+    quizzes.map((q) => q.assessmentId),
+    [userId],
+  );
   const byAssignment = new Map(subs.map((s) => [s.assignmentId, s]));
-
-  // Streak looks at every submission date; polyglot at the variety of formats.
-  const submittedDates = subs
-    .map((s) => s.submittedAt)
-    .filter((d): d is Date => d != null);
-  const kinds = new Set<string>();
-  for (const s of subs) for (const item of s.items) kinds.add(item.kind);
 
   const rows: ScorecardRow[] = asgs.map((a) => {
     const sub = byAssignment.get(a.id);
@@ -125,6 +227,17 @@ export async function getInternScorecard(userId: string): Promise<InternScorecar
       submittedAt: sub?.submittedAt ?? null,
     };
   });
+  rows.push(...quizRowsFor(userId, quizzes, attempts));
+
+  // Streak looks at every submission date — including quiz sittings, which are
+  // just as much "work done this week" as a task submission. Polyglot still
+  // counts only submission formats.
+  const submittedDates = [
+    ...subs.map((s) => s.submittedAt).filter((d): d is Date => d != null),
+    ...[...attempts.values()].map((a) => a.submittedAt),
+  ];
+  const kinds = new Set<string>();
+  for (const s of subs) for (const item of s.items) kinds.add(item.kind);
 
   return buildScorecard(rows, { submittedDates, itemKindCount: kinds.size });
 }
@@ -229,13 +342,15 @@ async function loadSubmissions(
   );
 }
 
-/** Build one intern's scorecard rows against a fixed set of assignments. */
+/** Build one intern's scorecard rows against a fixed set of work. */
 function scorecardRowsFor(
   internId: string,
   asgs: AssignmentLite[],
   subs: Map<string, SubLite>,
+  quizzes: QuizLite[],
+  attempts: Map<string, QuizAttemptLite>,
 ): ScorecardRow[] {
-  return asgs.map((a) => {
+  const rows: ScorecardRow[] = asgs.map((a) => {
     const sub = subs.get(`${internId}:${a.id}`);
     return {
       status: sub?.status ?? null,
@@ -245,6 +360,8 @@ function scorecardRowsFor(
       submittedAt: sub?.submittedAt ?? null,
     };
   });
+  rows.push(...quizRowsFor(internId, quizzes, attempts));
+  return rows;
 }
 
 /**
@@ -317,9 +434,14 @@ export async function getCohortLeaderboard(
   if (interns.length === 0) return { group, entries: [] };
 
   const asgs = await loadPublishedAssignments([groupId]);
+  const quizzes = await loadQuizzes([groupId]);
   const internIds = interns.map((m) => m.userId);
   const subs = await loadSubmissions(
     asgs.map((a) => a.id),
+    internIds,
+  );
+  const attempts = await loadBestAttempts(
+    quizzes.map((q) => q.assessmentId),
     internIds,
   );
 
@@ -328,7 +450,7 @@ export async function getCohortLeaderboard(
     name: m.user?.name ?? null,
     email: m.user?.email ?? "",
     image: m.user?.image ?? null,
-    ...scoreIntern(scorecardRowsFor(m.userId, asgs, subs)),
+    ...scoreIntern(scorecardRowsFor(m.userId, asgs, subs, quizzes, attempts)),
   }));
 
   const entries = rankByXp(scored).map((e) => ({
@@ -365,6 +487,14 @@ export async function getAdminCohortStandings(): Promise<CohortStanding[]> {
     else asgsByGroup.set(a.groupId, [a]);
   }
 
+  const quizzes = await loadQuizzes(allGroups.map((g) => g.id));
+  const quizzesByGroup = new Map<string, QuizLite[]>();
+  for (const q of quizzes) {
+    const arr = quizzesByGroup.get(q.groupId);
+    if (arr) arr.push(q);
+    else quizzesByGroup.set(q.groupId, [q]);
+  }
+
   const internIds = [
     ...new Set(allGroups.flatMap((g) => g.memberships.map((m) => m.userId))),
   ];
@@ -372,12 +502,22 @@ export async function getAdminCohortStandings(): Promise<CohortStanding[]> {
     asgs.map((a) => a.id),
     internIds,
   );
+  const attempts = await loadBestAttempts(
+    quizzes.map((q) => q.assessmentId),
+    internIds,
+  );
   const now = new Date();
 
   return allGroups.map((g) => {
     const groupAsgs = asgsByGroup.get(g.id) ?? [];
     const scored = g.memberships.map((m) => {
-      const rows = scorecardRowsFor(m.userId, groupAsgs, subs);
+      const rows = scorecardRowsFor(
+        m.userId,
+        groupAsgs,
+        subs,
+        quizzesByGroup.get(g.id) ?? [],
+        attempts,
+      );
       const overdue = countOverdue(rows, now);
       const base = scoreIntern(rows);
       return {

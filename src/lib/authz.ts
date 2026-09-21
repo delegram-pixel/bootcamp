@@ -81,7 +81,8 @@ export type Resource =
   | { kind: "assignment"; groupId: string; status: "draft" | "published" }
   | { kind: "note"; groupId: string | null }
   | { kind: "announcement"; groupId: string | null }
-  | { kind: "submission"; internId: string; groupId: string };
+  | { kind: "submission"; internId: string; groupId: string }
+  | { kind: "assessment"; groupId: string };
 
 /**
  * The single source of truth for access decisions. Every loader and Server
@@ -128,6 +129,13 @@ export async function can(
       // Only the owning intern, and only within a group they belong to.
       if (!["read", "create", "update", "submit"].includes(action)) return false;
       if (resource.internId !== user.id) return false;
+      return isGroupMember(user.id, resource.groupId);
+
+    case "assessment":
+      // Sitting a module's quiz — and seeing your own result. Interns never
+      // author or delete one (that path is `manage` on `{kind:"admin"}`, and
+      // `manage` is already refused for interns above).
+      if (!["read", "create"].includes(action)) return false;
       return isGroupMember(user.id, resource.groupId);
 
     default:
