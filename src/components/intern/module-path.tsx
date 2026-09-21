@@ -11,6 +11,7 @@ import type { ModuleState } from "@/lib/modules";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
+import { NoteAttachments } from "@/components/note-attachments";
 
 /** Collapse a flat, ordered module list into its week sections. */
 function byWeek(modules: ModuleListItem[]) {
@@ -217,14 +218,23 @@ function ModuleRow({
     );
   }
 
+  // Resources sit *outside* the Link: `NoteAttachments` renders anchors of its
+  // own, and an <a> nested inside an <a> is invalid HTML. The row keeps its
+  // shape and the chips land just beneath it. Locked modules get none — they
+  // can't be opened, so there is nothing to hand over yet.
   return (
-    <li>
+    <li className="space-y-2">
       <Link
         href={`/notes/${module.id}`}
         className="hover:bg-accent/50 flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors"
       >
         {inner}
       </Link>
+      {module.attachments.length > 0 ? (
+        <div className="px-1">
+          <NoteAttachments attachments={module.attachments} />
+        </div>
+      ) : null}
     </li>
   );
 }

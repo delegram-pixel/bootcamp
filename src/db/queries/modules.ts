@@ -10,6 +10,7 @@ import {
   memberships,
   noteAttachments,
   notes,
+  type NoteAttachment,
 } from "@/db/schema";
 import {
   attemptPct,
@@ -48,6 +49,8 @@ export type ModuleListItem = {
   bestPct: number | null;
   attempted: boolean;
   passed: boolean;
+  /** Resources a mentor attached — links, files, images. */
+  attachments: NoteAttachment[];
   /**
    * Gating state. Meaningless (always "unlocked") for reference notes, which
    * sit outside every path and are never gated.
@@ -104,6 +107,10 @@ export async function getModulePathsForIntern(userId: string): Promise<ModulePat
         columns: { id: true, passPct: true },
         with: { questions: { columns: { points: true } } },
       },
+      // Carried on the list item so an intern sees a module's resources without
+      // opening it — the admin's notes list has always shown them inline, and a
+      // link only the author can see is a link nobody uses.
+      attachments: { orderBy: [asc(noteAttachments.createdAt)] },
     },
     // Position is the path order; createdAt breaks ties so two notes sharing a
     // position still have one stable sequence.
@@ -130,6 +137,7 @@ export async function getModulePathsForIntern(userId: string): Promise<ModulePat
       weekNumber: row.weekNumber,
       position: row.position,
       group: row.group,
+      attachments: row.attachments,
       assessmentId: quiz?.id ?? null,
       passPct: quiz?.passPct ?? null,
       quizTotal: quiz?.total ?? null,
