@@ -80,7 +80,9 @@ export async function updateNote(input: NoteUpdateInput): Promise<ActionResult> 
           topic: data.topic || null,
         })
         .where(eq(notes.id, data.id));
-      revalidateNoteViews(groupId);
+      // The note's own page, not just the lists — the title, body, topic and
+      // week it shows all just changed.
+      revalidateNoteEditor(data.id, groupId);
       return ok(undefined, "Note updated");
     },
   );
@@ -98,7 +100,9 @@ export async function deleteNote(
     });
     if (!current) return fail("That note no longer exists.");
     await db.delete(notes).where(eq(notes.id, data.id));
-    revalidateNoteViews(current.groupId);
+    // Purge the reader and editor entries too, so a cached module page can't
+    // outlive the note it was built from.
+    revalidateNoteEditor(data.id, current.groupId);
     return ok(undefined, "Note deleted");
   });
 }

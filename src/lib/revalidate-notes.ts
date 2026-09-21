@@ -27,8 +27,17 @@ export function revalidateNoteViews(groupId?: string | null) {
   }
 }
 
-/** A note's reader views plus its own edit page (where the authoring panels live). */
+/**
+ * Every surface that shows one specific note: the module page an intern reads,
+ * its own edit page (where the authoring panels live), and the list/standing
+ * views that a change to it moves.
+ *
+ * The reader path matters as much as the editor one — adding a link, editing
+ * the body, or changing a quiz question all change what `/notes/[id]` renders,
+ * so leaving it out serves a stale module page to whoever opens it next.
+ */
 export function revalidateNoteEditor(noteId: string, groupId: string | null) {
+  revalidatePath(`/notes/${noteId}`);
   revalidatePath(`/notes/${noteId}/edit`);
   revalidateNoteViews(groupId);
 }
