@@ -24,6 +24,7 @@ const adminLinks: NavItem[] = [
   { href: "/admin/groups", label: "Groups", icon: "groups" },
   { href: "/admin/members", label: "Members", icon: "members" },
   { href: "/admin/assignments", label: "Tasks", icon: "assignments" },
+  { href: "/admin/assessments", label: "Assessments", icon: "assessments" },
   { href: "/admin/standings", label: "Standings", icon: "standings" },
   { href: "/notes", label: "Notes", icon: "notes" },
   { href: "/announcements", label: "Announcements", icon: "announcements" },

@@ -1,5 +1,6 @@
 import {
   BarChart3Icon,
+  ClipboardCheckIcon,
   ClipboardListIcon,
   LayersIcon,
   LayoutDashboardIcon,
@@ -26,7 +27,8 @@ export type NavIconKey =
   | "overview"
   | "standings"
   | "groups"
-  | "members";
+  | "members"
+  | "assessments";
 
 export const NAV_ICONS: Record<NavIconKey, LucideIcon> = {
   dashboard: LayoutDashboardIcon,
@@ -38,4 +40,7 @@ export const NAV_ICONS: Record<NavIconKey, LucideIcon> = {
   standings: BarChart3Icon,
   groups: LayersIcon,
   members: UsersIcon,
+  // The same glyph the module page uses for its Assessment heading, so the nav
+  // entry and the thing it opens read as one concept.
+  assessments: ClipboardCheckIcon,
 };

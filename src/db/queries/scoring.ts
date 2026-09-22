@@ -83,7 +83,7 @@ const EMPTY_EXTRAS: ScorecardExtras = { submittedDates: [], itemKindCount: 0 };
  * question points — the percentage denominator, and the contribution to the
  * cumulative grade pool's `possible`.
  */
-type QuizLite = {
+export type QuizLite = {
   assessmentId: string;
   noteId: string;
   groupId: string;
@@ -99,7 +99,7 @@ type QuizAttemptLite = AttemptLike;
  * zero in the intern's grade denominator. Mirrors `usableQuiz` in
  * `queries/modules.ts` so the grade and the gate agree on what counts as a quiz.
  */
-async function loadQuizzes(groupIds: string[]): Promise<QuizLite[]> {
+export async function loadQuizzes(groupIds: string[]): Promise<QuizLite[]> {
   if (groupIds.length === 0) return [];
   const rows = await db
     .select({
